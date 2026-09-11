@@ -7,42 +7,70 @@ struct ResultView: View {
 
     var body: some View {
         let o = filled.order
-        VStack(spacing: 22) {
-            Spacer(minLength: 20)
-            ZStack {
-                Circle().fill(Theme.green.opacity(0.15)).frame(width: 130, height: 130).scaleEffect(appear ? 1 : 0.5)
-                Image(systemName: "checkmark.circle.fill").font(.system(size: 84)).foregroundStyle(Theme.green)
-                    .scaleEffect(appear ? 1 : 0.3)
+        VStack(spacing: 0) {
+            NavBar(title: "订单详情") { EmptyView() } trailing: {
+                Button { state.reset() } label: { Image(systemName: "xmark").foregroundStyle(Theme.text) }
             }
-            Text("订单已成交").font(.title.bold())
-            Text("已通过系统通知推送成交回执").font(.caption).foregroundStyle(Theme.text2)
+            ScrollView {
+                VStack(spacing: 12) {
+                    VStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill").font(.system(size: 56)).foregroundStyle(Theme.green)
+                            .scaleEffect(appear ? 1 : 0.4)
+                        Text("已成交").font(Theme.title)
+                        Text("成交回执已通过系统通知推送").font(Theme.caption).foregroundStyle(Theme.text3)
+                    }.padding(.vertical, 20)
 
+                    // 交易对头
+                    HStack(spacing: 12) {
+                        CoinIcon(symbol: o.baseAsset, size: 36)
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 6) {
+                                Text("\(o.baseAsset)USDT").font(Theme.f(18, .semibold))
+                                Chip(text: "永续", fg: Theme.text3)
+                            }
+                            HStack(spacing: 6) {
+                                Chip(text: o.side.label, fg: .white, bg: o.side == .long ? Theme.green : Theme.red)
+                                Chip(text: o.marginMode.label, fg: Theme.brand, bg: Theme.yellowBg)
+                                Chip(text: "\(o.leverage)x", fg: Theme.brand, bg: Theme.yellowBg)
+                            }
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text(Fmt.price(filled.entryPrice)).font(Theme.f(18, .semibold))
+                            Text("开仓均价").font(Theme.tiny).foregroundStyle(Theme.text3)
+                        }
+                    }.padding(16).background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.r8))
+
+                    VStack(spacing: 0) {
+                        line("数量", String(format: "%.4f %@", filled.quantity, o.baseAsset))
+                        line("保证金", Fmt.usdt(o.notionalUSDT))
+                        line("名义价值", Fmt.usdt(o.notionalUSDT * Double(o.leverage)))
+                        if let tp = o.takeProfit { line("止盈", Fmt.price(tp.resolved(entry: filled.entryPrice, side: o.side, isTakeProfit: true)), color: Theme.green) }
+                        if let sl = o.stopLoss { line("止损", Fmt.price(sl.resolved(entry: filled.entryPrice, side: o.side, isTakeProfit: false)), color: Theme.red) }
+                        line("预估强平价", Fmt.price(filled.liquidationPrice), color: Theme.brand)
+                        line("订单类型", "市价")
+                        line("成交时间", filled.filledAt.formatted(date: .numeric, time: .standard))
+                        line("订单号", filled.orderId, last: true)
+                    }
+                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.r8))
+                }.padding(16)
+            }
             VStack(spacing: 0) {
-                line("交易对", "\(o.baseAsset)USDT 永续")
-                line("方向", o.side.label, color: o.side == .long ? Theme.green : Theme.red)
-                line("杠杆 / 模式", "\(o.leverage)x · \(o.marginMode.label)")
-                line("开仓价", Fmt.price(filled.entryPrice))
-                line("数量", String(format: "%.4f %@", filled.quantity, o.baseAsset))
-                line("保证金", Fmt.usdt(o.notionalUSDT))
-                if let tp = o.takeProfit { line("止盈", Fmt.price(tp.resolved(entry: filled.entryPrice, side: o.side, isTakeProfit: true)), color: Theme.green) }
-                if let sl = o.stopLoss { line("止损", Fmt.price(sl.resolved(entry: filled.entryPrice, side: o.side, isTakeProfit: false)), color: Theme.red) }
-                line("预估强平价", Fmt.price(filled.liquidationPrice), color: Theme.yellow)
-                line("订单号", filled.orderId, last: true)
+                Rectangle().fill(Theme.line).frame(height: 1)
+                Button("完成") { state.reset() }.buttonStyle(BinanceButton())
+                    .padding(.horizontal, 16).padding(.top, 12).padding(.bottom, 8)
             }
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
-
-            Spacer()
-            Button("完成") { state.reset() }.buttonStyle(PrimaryButton())
         }
-        .padding(20)
         .onAppear { withAnimation(.spring(duration: 0.6, bounce: 0.4)) { appear = true } }
     }
 
-    private func line(_ k: String, _ v: String, color: Color = .primary, last: Bool = false) -> some View {
-        VStack(spacing: 0) {
-            HStack { Text(k).foregroundStyle(Theme.text2); Spacer(); Text(v).foregroundStyle(color).font(.body.monospacedDigit()) }
-                .padding(.horizontal, 14).padding(.vertical, 11)
-            if !last { Divider().overlay(Theme.card2).padding(.leading, 14) }
+    private func line(_ k: String, _ v: String, color: Color = Theme.text, last: Bool = false) -> some View {
+        HStack {
+            Text(k).font(Theme.body).foregroundStyle(Theme.text3)
+            Spacer()
+            Text(v).font(Theme.bodyM).foregroundStyle(color)
         }
+        .padding(.horizontal, 16).frame(height: 44)
+        .bnDivider(leading: last ? 1000 : 16)
     }
 }

@@ -14,11 +14,13 @@ struct RootView: View {
             case .failed(let msg): FailedView(message: msg)
             }
         }
+        .foregroundStyle(Theme.text)
+        .tint(Theme.yellow)
         .animation(.spring(duration: 0.35), value: state.stage)
         .onAppear(perform: runDemoArgsIfAny)
     }
 
-    /// 仅供自动化演示:xcrun simctl launch ... -demoTranscript "做多比特币…" [-autoSubmit]
+    /// 仅供自动化演示:xcrun simctl launch ... -demoTranscript "做多比特币…" [-autoSubmit | -island]
     private func runDemoArgsIfAny() {
         #if DEBUG
         let args = ProcessInfo.processInfo.arguments
@@ -36,117 +38,184 @@ struct RootView: View {
 
 struct HomeView: View {
     @EnvironmentObject var state: AppState
-    @State private var showHistory = false
 
     var body: some View {
         VStack(spacing: 0) {
             header
             ScrollView {
-                VStack(spacing: 20) {
-                    actionButtonHint
-                    micButton
+                VStack(spacing: 12) {
+                    hero
                     manualInput
                     examples
                     if !state.orders.history.isEmpty { recent }
                 }
-                .padding(20)
+                .padding(.horizontal, 16).padding(.vertical, 12)
             }
         }
+        .sheet(isPresented: $state.showSettings) { SettingsView() }
     }
 
     private var header: some View {
-        HStack {
-            Image(systemName: "hexagon.fill").foregroundStyle(Theme.yellow).font(.title2)
-            Text("Binance").font(.title2.bold())
-            Text("Voice Agent").font(.title2).foregroundStyle(Theme.text2)
+        HStack(spacing: 8) {
+            BinanceLogo(size: 22)
+            Text("Binance").font(Theme.f(18, .bold)).foregroundStyle(Theme.text)
+            Text("Voice").font(Theme.f(18, .bold)).foregroundStyle(Theme.brand)
             Spacer()
-            Text("Futures").font(.caption.bold()).padding(.horizontal, 8).padding(.vertical, 4)
-                .background(Theme.card2, in: Capsule()).foregroundStyle(Theme.yellow)
-            Button { state.showSettings = true } label: { Image(systemName: "gearshape.fill").foregroundStyle(Theme.text2) }
-                .padding(.leading, 6)
+            Chip(text: "USDⓈ-M 合约", fg: Theme.text2)
+            Button { state.showSettings = true } label: {
+                Image(systemName: "gearshape").font(Theme.f(18, .medium)).foregroundStyle(Theme.text)
+            }.padding(.leading, 8)
         }
-        .sheet(isPresented: $state.showSettings) { SettingsView() }
-        .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 12)
+        .padding(.horizontal, 16).frame(height: 44)
     }
 
-    private var actionButtonHint: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "button.vertical.left.press.fill").font(.title).foregroundStyle(Theme.yellow)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("按下侧边 Action Button 即可开口下单").font(.subheadline.bold())
-                Text("设置 → 操作按钮 → 快捷指令 → 语音下单").font(.caption).foregroundStyle(Theme.text2)
-            }
-            Spacer()
-        }
-        .padding(14).background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
-    }
-
-    private var micButton: some View {
-        Button { state.triggerListening() } label: {
-            VStack(spacing: 14) {
-                ZStack {
-                    Circle().fill(Theme.yellow.opacity(0.15)).frame(width: 150, height: 150)
-                    Circle().fill(Theme.yellow).frame(width: 110, height: 110)
-                    Image(systemName: "mic.fill").font(.system(size: 44)).foregroundStyle(.black)
+    /// 顶部主操作:Binance 风格“大数值 + 主按钮”的黄卡
+    private var hero: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("AI 语音下单").font(Theme.f(22, .semibold)).foregroundStyle(Theme.text)
+                    Text("一句话开仓:方向 · 币种 · 杠杆 · 全仓/逐仓 · 保证金 · 止盈止损")
+                        .font(Theme.caption).foregroundStyle(Theme.text3)
                 }
-                Text("点击开始听写").font(.headline)
+                Spacer()
+                Image(systemName: "waveform").font(Theme.f(28, .medium)).foregroundStyle(Theme.brand)
             }
+            .padding(16)
+
+            Rectangle().fill(Theme.line).frame(height: 1)
+
+            VStack(spacing: 12) {
+                Button { state.triggerListening() } label: {
+                    HStack(spacing: 8) { Image(systemName: "mic.fill"); Text("开始听写") }
+                }.buttonStyle(BinanceButton())
+
+                HStack(spacing: 6) {
+                    Image(systemName: "button.vertical.left.press.fill").foregroundStyle(Theme.text3)
+                    Text("或按侧边 Action Button,在任意 App 直接说指令").font(Theme.caption).foregroundStyle(Theme.text3)
+                    Spacer()
+                    Button("设置") { state.showSettings = true }.font(Theme.captionM).foregroundStyle(Theme.brand)
+                }
+            }
+            .padding(16)
         }
-        .buttonStyle(.plain).padding(.vertical, 10)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.r8))
     }
 
     private var manualInput: some View {
-        HStack {
-            TextField("或直接输入指令…", text: $state.manualText)
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass").foregroundStyle(Theme.text3)
+            TextField("", text: $state.manualText, prompt: Text("输入指令,例如:做多 BTC 10倍 全仓 200U").foregroundStyle(Theme.text4))
+                .font(Theme.body).foregroundStyle(Theme.text)
                 .textFieldStyle(.plain).submitLabel(.send)
                 .onSubmit { state.submitManual() }
-            Button { state.submitManual() } label: {
-                Image(systemName: "arrow.up.circle.fill").font(.title2)
-            }.disabled(state.manualText.isEmpty)
+            if !state.manualText.isEmpty {
+                Button { state.submitManual() } label: {
+                    Text("解析").font(Theme.captionM).foregroundStyle(Theme.onYellow)
+                        .padding(.horizontal, 10).padding(.vertical, 6)
+                        .background(Theme.yellow, in: RoundedRectangle(cornerRadius: Theme.r4))
+                }
+            }
         }
-        .padding(14).background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+        .padding(.horizontal, 12).frame(height: 44)
+        .background(Theme.card2, in: RoundedRectangle(cornerRadius: Theme.r4))
     }
 
-    private let samples = [
-        "做多比特币 十倍 全仓 200U 止盈7万 止损6.5万",
-        "做空以太坊 20倍 逐仓 500U 止盈5% 止损3%",
-        "买入 SOL 5倍 全仓 1000 USDT",
+    private let samples: [(String, String, TradeSide)] = [
+        ("BTC", "做多比特币 十倍 全仓 200U 止盈7万 止损6.5万", .long),
+        ("ETH", "做空以太坊 20倍 逐仓 500U 止盈5% 止损3%", .short),
+        ("SOL", "买入 SOL 5倍 全仓 1000 USDT", .long),
     ]
 
     private var examples: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("试试这样说").font(.caption).foregroundStyle(Theme.text2)
-            ForEach(samples, id: \.self) { s in
-                Button { state.handleTranscript(s) } label: {
-                    HStack {
-                        Image(systemName: "quote.opening").font(.caption2).foregroundStyle(Theme.yellow)
-                        Text(s).font(.subheadline).multilineTextAlignment(.leading)
+        section("试试这样说") {
+            ForEach(Array(samples.enumerated()), id: \.offset) { i, s in
+                Button { state.handleTranscript(s.1) } label: {
+                    HStack(spacing: 12) {
+                        CoinIcon(symbol: s.0)
+                        VStack(alignment: .leading, spacing: 3) {
+                            HStack(spacing: 6) {
+                                Text("\(s.0)USDT").font(Theme.bodyS).foregroundStyle(Theme.text)
+                                Chip(text: "永续", fg: Theme.text3)
+                            }
+                            Text(s.1).font(Theme.caption).foregroundStyle(Theme.text3).lineLimit(1)
+                        }
                         Spacer()
-                        Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.text2)
+                        Text(s.2 == .long ? "做多" : "做空").font(Theme.captionM)
+                            .foregroundStyle(s.2 == .long ? Theme.green : Theme.red)
+                        Image(systemName: "chevron.right").font(Theme.tiny).foregroundStyle(Theme.text4)
                     }
-                    .padding(12).background(Theme.card, in: RoundedRectangle(cornerRadius: 12))
-                }.buttonStyle(.plain)
+                    .padding(.horizontal, 16).frame(height: 60)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .bnDivider(leading: i == samples.count - 1 ? 1000 : 16)
             }
         }
     }
 
     private var recent: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("最近成交").font(.caption).foregroundStyle(Theme.text2)
-            ForEach(state.orders.history.prefix(5)) { f in
-                HStack {
-                    Text(f.order.side.short).font(.caption.bold()).frame(width: 24, height: 24)
-                        .background(f.order.side == .long ? Theme.green : Theme.red, in: RoundedRectangle(cornerRadius: 6))
-                    VStack(alignment: .leading) {
-                        Text("\(f.order.baseAsset)USDT \(f.order.leverage)x").font(.subheadline.bold())
-                        Text(f.filledAt.formatted(date: .omitted, time: .shortened)).font(.caption2).foregroundStyle(Theme.text2)
+        section("最近成交") {
+            let items = Array(state.orders.history.prefix(5))
+            ForEach(Array(items.enumerated()), id: \.element.id) { i, f in
+                HStack(spacing: 12) {
+                    CoinIcon(symbol: f.order.baseAsset)
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(spacing: 6) {
+                            Text("\(f.order.baseAsset)USDT").font(Theme.bodyS).foregroundStyle(Theme.text)
+                            Chip(text: "\(f.order.marginMode.label) \(f.order.leverage)x", fg: Theme.brand, bg: Theme.yellowBg)
+                        }
+                        Text(f.filledAt.formatted(date: .numeric, time: .shortened)).font(Theme.caption).foregroundStyle(Theme.text3)
                     }
                     Spacer()
-                    Text(Fmt.price(f.entryPrice)).font(.subheadline.monospacedDigit())
+                    VStack(alignment: .trailing, spacing: 3) {
+                        Text(Fmt.price(f.entryPrice)).font(Theme.num).foregroundStyle(Theme.text)
+                        Text(f.order.side == .long ? "开多" : "开空").font(Theme.caption)
+                            .foregroundStyle(f.order.side == .long ? Theme.green : Theme.red)
+                    }
                 }
-                .padding(12).background(Theme.card, in: RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal, 16).frame(height: 60)
+                .bnDivider(leading: i == items.count - 1 ? 1000 : 16)
             }
         }
+    }
+
+    private func section<C: View>(_ title: String, @ViewBuilder content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title).font(Theme.h2).foregroundStyle(Theme.text).padding(.horizontal, 16).padding(.vertical, 12)
+            content()
+        }
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.r8))
+    }
+}
+
+/// Binance 六边形 Logo 近似
+struct BinanceLogo: View {
+    var size: CGFloat = 24
+    var body: some View {
+        Image(systemName: "hexagon.fill").font(.system(size: size)).foregroundStyle(Theme.brand)
+            .overlay(Image(systemName: "diamond.fill").font(.system(size: size * 0.42)).foregroundStyle(Theme.bg))
+    }
+}
+
+/// 币种圆形图标(首字母,币安列表样式)
+struct CoinIcon: View {
+    let symbol: String
+    var size: CGFloat = 32
+    private var color: Color {
+        switch symbol.uppercased() {
+        case "BTC": return Color(hex: 0xF7931A)
+        case "ETH": return Color(hex: 0x627EEA)
+        case "SOL": return Color(hex: 0x9945FF)
+        case "BNB": return Theme.brand
+        case "DOGE": return Color(hex: 0xC2A633)
+        case "XRP": return Color(hex: 0x23292F)
+        default: return Theme.card2
+        }
+    }
+    var body: some View {
+        Text(String(symbol.prefix(1))).font(.system(size: size * 0.45, weight: .bold)).foregroundStyle(.white)
+            .frame(width: size, height: size).background(color, in: Circle())
     }
 }
 
@@ -156,26 +225,19 @@ struct FailedView: View {
     @EnvironmentObject var state: AppState
     let message: String
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             Spacer()
-            Image(systemName: "xmark.octagon.fill").font(.system(size: 72)).foregroundStyle(Theme.red)
-            Text("下单失败").font(.title.bold())
-            Text(message).foregroundStyle(Theme.text2).multilineTextAlignment(.center)
+            Image(systemName: "xmark.circle.fill").font(.system(size: 64)).foregroundStyle(Theme.red)
+            Text("下单失败").font(Theme.title)
+            Text(message).font(Theme.body).foregroundStyle(Theme.text3).multilineTextAlignment(.center)
             Spacer()
-            Button("返回") { state.reset() }.buttonStyle(PrimaryButton())
-        }.padding(24)
+            Button("返回") { state.reset() }.buttonStyle(BinanceButton())
+        }.padding(16)
     }
 }
 
-struct PrimaryButton: ButtonStyle {
-    var color: Color = Theme.yellow
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline).foregroundStyle(.black)
-            .frame(maxWidth: .infinity).padding(.vertical, 16)
-            .background(color.opacity(configuration.isPressed ? 0.7 : 1), in: RoundedRectangle(cornerRadius: 14))
-    }
-}
+/// 兼容旧调用
+typealias PrimaryButton = BinanceButton
 
 // MARK: - Settings
 
@@ -184,37 +246,60 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         NavigationStack {
-            List {
-                Section("安全") {
-                    Toggle(isOn: $state.requireBiometrics) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("下单前 \(BiometricService.kindName) 确认")
-                            Text("关闭时仅需手机已解锁。开启后灵动岛「下单」会跳回 App 验证。").font(.caption).foregroundStyle(Theme.text2)
+            ScrollView {
+                VStack(spacing: 12) {
+                    group("安全") {
+                        HStack(alignment: .top, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("下单前 \(BiometricService.kindName) 确认").font(Theme.bodyM).foregroundStyle(Theme.text)
+                                Text("关闭时仅需手机已解锁,灵动岛「下单」直接后台成交;开启后会跳回 App 验证。")
+                                    .font(Theme.caption).foregroundStyle(Theme.text3)
+                            }
+                            Spacer()
+                            Toggle("", isOn: $state.requireBiometrics).labelsHidden().tint(Theme.green)
+                        }.padding(16)
+                    }
+                    group("Action Button 全局触发(不打开 App)") {
+                        VStack(alignment: .leading, spacing: 12) {
+                            step(1, "打开「快捷指令」App,新建快捷指令")
+                            step(2, "添加动作「听写文本」(语言:中文)")
+                            step(3, "添加动作「Binance Voice → 语音下单(灵动岛)」,把听写文本接到「交易指令」")
+                            step(4, "设置 → 操作按钮 → 快捷指令 → 选择它")
+                            Text("之后在 Coinglass / TradingView 任意界面按侧键:说指令 → 灵动岛显示配置 → 点「下单」→ 通知成交。")
+                                .font(Theme.caption).foregroundStyle(Theme.text3)
+                        }.padding(16)
+                    }
+                    group("关于") {
+                        VStack(spacing: 0) {
+                            kv("下单通道", "模拟 USDⓈ-M 合约")
+                            kv("版本", "1.0", last: true)
                         }
-                    }.tint(Theme.yellow)
-                }
-                Section("Action Button 全局触发(不打开 App)") {
-                    step(1, "打开「快捷指令」App,新建快捷指令")
-                    step(2, "添加动作「听写文本」(语言:中文)")
-                    step(3, "添加动作「Binance Voice → 语音下单(灵动岛)」,把听写文本接到「交易指令」")
-                    step(4, "设置 → 操作按钮 → 快捷指令 → 选择它")
-                    Text("之后在 Coinglass / TradingView 任意界面按侧键:说指令 → 灵动岛显示配置 → 点「下单」→ 通知成交。")
-                        .font(.caption).foregroundStyle(Theme.text2)
-                }
-                Section("关于") {
-                    LabeledContent("下单通道", value: "模拟 USDⓈ-M 合约")
-                    LabeledContent("版本", value: "1.0")
-                }
+                    }
+                }.padding(16)
             }
-            .scrollContentBackground(.hidden).background(Theme.bg)
+            .background(Theme.bg)
+            .toolbarBackground(Theme.bg, for: .navigationBar).toolbarBackground(.visible, for: .navigationBar)
             .navigationTitle("设置").navigationBarTitleDisplayMode(.inline)
-            .toolbar { Button("完成") { dismiss() } }
+            .toolbar { Button("完成") { dismiss() }.font(Theme.bodyM).foregroundStyle(Theme.brand) }
+        }
+        .foregroundStyle(Theme.text)
+    }
+    private func group<C: View>(_ title: String, @ViewBuilder content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).font(Theme.caption).foregroundStyle(Theme.text3).padding(.horizontal, 4)
+            content().frame(maxWidth: .infinity, alignment: .leading)
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.r8))
         }
     }
     private func step(_ n: Int, _ t: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
-            Text("\(n)").font(.caption.bold()).frame(width: 20, height: 20).background(Theme.yellow, in: Circle()).foregroundStyle(.black)
-            Text(t).font(.subheadline)
+            Text("\(n)").font(Theme.tiny).frame(width: 18, height: 18).background(Theme.yellow, in: Circle()).foregroundStyle(Theme.onYellow)
+            Text(t).font(Theme.body).foregroundStyle(Theme.text)
         }
+    }
+    private func kv(_ k: String, _ v: String, last: Bool = false) -> some View {
+        HStack { Text(k).font(Theme.body).foregroundStyle(Theme.text3); Spacer(); Text(v).font(Theme.body).foregroundStyle(Theme.text) }
+            .padding(.horizontal, 16).frame(height: 48)
+            .bnDivider(leading: last ? 1000 : 16)
     }
 }

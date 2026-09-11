@@ -3,14 +3,16 @@ import Foundation
 enum TradeSide: String, Codable, CaseIterable, Identifiable {
     case long, short
     var id: String { rawValue }
-    var label: String { self == .long ? "做多 Long" : "做空 Short" }
+    var label: String { self == .long ? "做多" : "做空" }
+    var labelEN: String { self == .long ? "Long" : "Short" }
     var short: String { self == .long ? "多" : "空" }
 }
 
 enum MarginMode: String, Codable, CaseIterable, Identifiable {
     case cross, isolated
     var id: String { rawValue }
-    var label: String { self == .cross ? "全仓 Cross" : "逐仓 Isolated" }
+    var label: String { self == .cross ? "全仓" : "逐仓" }
+    var labelEN: String { self == .cross ? "Cross" : "Isolated" }
 }
 
 /// 止盈/止损可以是绝对价格,也可以是相对开仓价的百分比

@@ -14,30 +14,34 @@ struct ConfirmView: View {
         Binding(get: { state.draft ?? TradeOrder(symbol: "", side: .long, leverage: 5, marginMode: .cross, notionalUSDT: 100) },
                 set: { state.draft = $0 })
     }
+    private var o: TradeOrder { order.wrappedValue }
     private var busy: Bool { state.stage == .authenticating || state.stage == .submitting }
-    private var mark: Double? { OrderService.markPrice(order.wrappedValue.symbol) }
+    private var mark: Double? { OrderService.markPrice(o.symbol) }
+    private var sideColor: Color { o.side == .long ? Theme.green : Theme.red }
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Button("重新说") { state.startListening() }.disabled(busy)
-                Spacer()
-                Text("确认订单").font(.headline)
-                Spacer()
-                Button("取消") { state.reset() }.foregroundStyle(Theme.text2).disabled(busy)
-            }.padding(.horizontal, 20).padding(.vertical, 12)
+            NavBar(title: "确认订单") {
+                Button { state.startListening() } label: {
+                    HStack(spacing: 4) { Image(systemName: "mic"); Text("重新说") }
+                }.foregroundStyle(Theme.text).disabled(busy)
+            } trailing: {
+                Button("取消") { state.reset() }.foregroundStyle(Theme.text3).disabled(busy)
+            }
 
             ScrollView {
-                VStack(spacing: 14) {
-                    transcriptCard
-                    agentCard
-                    fieldsCard
-                    tpslCard
-                    if !order.wrappedValue.missingFields.isEmpty {
-                        Label("请补全:\(order.wrappedValue.missingFields.joined(separator: "、"))", systemImage: "exclamationmark.triangle.fill")
-                            .font(.caption).foregroundStyle(Theme.red)
+                VStack(spacing: 12) {
+                    symbolHeader
+                    agentPanel
+                    orderPanel
+                    tpslPanel
+                    if !o.missingFields.isEmpty {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                            Text("请补全:\(o.missingFields.joined(separator: "、"))")
+                        }.font(Theme.caption).foregroundStyle(Theme.red).frame(maxWidth: .infinity, alignment: .leading)
                     }
-                }.padding(20)
+                }.padding(16)
             }
 
             submitBar
@@ -46,126 +50,204 @@ struct ConfirmView: View {
         .disabled(busy)
     }
 
-    // MARK: cards
+    // MARK: 交易对头部(Binance 合约页顶部样式)
 
-    private var transcriptCard: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "waveform").foregroundStyle(Theme.yellow)
-            Text("“\(order.wrappedValue.rawTranscript)”").font(.subheadline).italic()
-            Spacer()
-        }.padding(14).background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
-    }
-
-    private var agentCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "sparkles").foregroundStyle(Theme.yellow)
-                Text("Agent 理解").font(.subheadline.bold())
-                Spacer()
-                Text("置信度 \(Int(state.confidence * 100))%").font(.caption)
-                    .foregroundStyle(state.confidence > 0.7 ? Theme.green : Theme.yellow)
-            }
-            Text(order.wrappedValue.summary).font(.body.weight(.medium))
-            ForEach(state.agentNotes, id: \.self) { n in
-                Label(n, systemImage: "info.circle").font(.caption).foregroundStyle(Theme.text2)
-            }
-            if let mark {
-                Text("标记价 \(Fmt.price(mark))  ·  预计仓位 \(String(format: "%.4f", order.wrappedValue.notionalUSDT * Double(order.wrappedValue.leverage) / mark)) \(order.wrappedValue.baseAsset)")
-                    .font(.caption).foregroundStyle(Theme.text2)
-            }
-        }.padding(14).background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
-    }
-
-    private var fieldsCard: some View {
-        VStack(spacing: 14) {
-            row("币种") {
-                TextField("BTC", text: Binding(
-                    get: { order.wrappedValue.baseAsset },
-                    set: { order.wrappedValue.symbol = $0.uppercased().isEmpty ? "" : $0.uppercased().replacingOccurrences(of: "USDT", with: "") + "USDT" }))
-                    .multilineTextAlignment(.trailing).textInputAutocapitalization(.characters).autocorrectionDisabled()
-                    .font(.body.bold())
-                Text("USDT 永续").font(.caption).foregroundStyle(Theme.text2)
-            }
-            Picker("方向", selection: order.side) {
-                ForEach(TradeSide.allCases) { Text($0.label).tag($0) }
-            }.pickerStyle(.segmented)
-            Picker("仓位模式", selection: order.marginMode) {
-                ForEach(MarginMode.allCases) { Text($0.label).tag($0) }
-            }.pickerStyle(.segmented)
-            VStack(spacing: 6) {
-                HStack {
-                    Text("杠杆").foregroundStyle(Theme.text2)
-                    Spacer()
-                    Text("\(order.wrappedValue.leverage)x").font(.title3.bold().monospacedDigit()).foregroundStyle(Theme.yellow)
+    private var symbolHeader: some View {
+        HStack(spacing: 12) {
+            CoinIcon(symbol: o.baseAsset.isEmpty ? "?" : o.baseAsset, size: 36)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    TextField("BTC", text: Binding(
+                        get: { o.baseAsset },
+                        set: { order.wrappedValue.symbol = $0.uppercased().isEmpty ? "" : $0.uppercased().replacingOccurrences(of: "USDT", with: "") + "USDT" }))
+                        .font(Theme.f(18, .semibold)).foregroundStyle(Theme.text)
+                        .textInputAutocapitalization(.characters).autocorrectionDisabled().fixedSize()
+                    Text("USDT").font(Theme.f(18, .semibold)).foregroundStyle(Theme.text).padding(.leading, -6)
+                    Chip(text: "永续", fg: Theme.text3)
                 }
-                Slider(value: Binding(get: { Double(order.wrappedValue.leverage) }, set: { order.wrappedValue.leverage = Int($0) }), in: 1...125, step: 1)
+                HStack(spacing: 6) {
+                    Chip(text: o.marginMode.label, fg: Theme.brand, bg: Theme.yellowBg)
+                    Chip(text: "\(o.leverage)x", fg: Theme.brand, bg: Theme.yellowBg)
+                }
+            }
+            Spacer()
+            if let mark {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(Fmt.price(mark)).font(Theme.f(18, .semibold)).foregroundStyle(Theme.text)
+                    Text("标记价格").font(Theme.tiny).foregroundStyle(Theme.text3)
+                }
+            }
+        }
+        .padding(16).background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.r8))
+    }
+
+    // MARK: Agent 理解
+
+    private var agentPanel: some View {
+        Panel {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    ForEach([1, 5, 10, 20, 50, 100], id: \.self) { l in
-                        Button("\(l)x") { order.wrappedValue.leverage = l }
-                            .font(.caption.bold()).padding(.horizontal, 10).padding(.vertical, 6)
-                            .background(order.wrappedValue.leverage == l ? Theme.yellow : Theme.card2, in: Capsule())
-                            .foregroundStyle(order.wrappedValue.leverage == l ? .black : .primary)
+                    Image(systemName: "sparkles").foregroundStyle(Theme.brand)
+                    Text("Agent 理解").font(Theme.bodyS).foregroundStyle(Theme.text)
+                    Spacer()
+                    Chip(text: "置信度 \(Int(state.confidence * 100))%",
+                         fg: state.confidence > 0.7 ? Theme.green : Theme.brand,
+                         bg: state.confidence > 0.7 ? Theme.greenBg : Theme.yellowBg)
+                }
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "quote.opening").font(Theme.tiny).foregroundStyle(Theme.text4).padding(.top, 3)
+                    Text(o.rawTranscript).font(Theme.body).foregroundStyle(Theme.text2)
+                }
+                Text(o.summary).font(Theme.bodyM).foregroundStyle(Theme.text)
+                ForEach(state.agentNotes, id: \.self) { n in
+                    HStack(alignment: .top, spacing: 6) {
+                        Image(systemName: "info.circle").font(Theme.caption).padding(.top, 1)
+                        Text(n).font(Theme.caption)
+                    }.foregroundStyle(Theme.text3)
+                }
+            }
+        }
+    }
+
+    // MARK: 下单面板(方向 / 模式 / 杠杆 / 保证金)
+
+    private var orderPanel: some View {
+        Panel {
+            VStack(spacing: 12) {
+                BinanceSegment(items: [(TradeSide.long, "买入 / 做多"), (.short, "卖出 / 做空")], selection: order.side,
+                               activeColor: { $0 == .long ? Theme.green : Theme.red }, activeFg: { _ in .white }, height: 40)
+
+                HStack(spacing: 8) {
+                    BinanceSegment(items: [(MarginMode.cross, "全仓"), (.isolated, "逐仓")], selection: order.marginMode,
+                                   activeColor: { _ in Theme.card2 }, activeFg: { _ in Theme.brand })
+                    HStack(spacing: 4) {
+                        Text("\(o.leverage)x").font(Theme.bodyS).foregroundStyle(Theme.brand)
+                        Image(systemName: "chevron.down").font(Theme.tiny).foregroundStyle(Theme.text3)
+                    }
+                    .frame(width: 72, height: 36)
+                    .background(Theme.card2, in: RoundedRectangle(cornerRadius: Theme.r4))
+                }
+
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("杠杆").font(Theme.caption).foregroundStyle(Theme.text3)
+                        Spacer()
+                        Text("\(o.leverage)x").font(Theme.numL).foregroundStyle(Theme.text)
+                    }
+                    Slider(value: Binding(get: { Double(o.leverage) }, set: { order.wrappedValue.leverage = Int($0) }), in: 1...125, step: 1)
+                        .tint(Theme.yellow)
+                    HStack(spacing: 6) {
+                        ForEach([1, 5, 10, 20, 50, 100], id: \.self) { l in
+                            let on = o.leverage == l
+                            Button("\(l)x") { order.wrappedValue.leverage = l }
+                                .font(Theme.captionM).frame(maxWidth: .infinity).frame(height: 28)
+                                .background(on ? Theme.yellowBg : Theme.card2, in: RoundedRectangle(cornerRadius: Theme.r4))
+                                .overlay(RoundedRectangle(cornerRadius: Theme.r4).stroke(on ? Theme.brand : .clear, lineWidth: 1))
+                                .foregroundStyle(on ? Theme.brand : Theme.text2)
+                        }
+                    }
+                }
+
+                BinanceField(label: "保证金", unit: "USDT") {
+                    TextField("", text: $amountText, prompt: Text("0").foregroundStyle(Theme.text4))
+                        .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
+                        .onChange(of: amountText) { _, v in order.wrappedValue.notionalUSDT = Double(v) ?? 0 }
+                }
+
+                if let mark {
+                    VStack(spacing: 6) {
+                        kv("名义价值", Fmt.usdt(o.notionalUSDT * Double(o.leverage)))
+                        kv("预计数量", String(format: "%.4f %@", o.notionalUSDT * Double(o.leverage) / mark, o.baseAsset))
+                        kv("下单类型", "市价")
                     }
                 }
             }
-            row("保证金") {
-                TextField("100", text: $amountText).keyboardType(.decimalPad).multilineTextAlignment(.trailing).font(.body.bold())
-                    .onChange(of: amountText) { _, v in order.wrappedValue.notionalUSDT = Double(v) ?? 0 }
-                Text("USDT").font(.caption).foregroundStyle(Theme.text2)
+        }
+    }
+
+    // MARK: 止盈止损
+
+    private var tpslPanel: some View {
+        Panel {
+            VStack(spacing: 12) {
+                HStack {
+                    Text("止盈 / 止损").font(Theme.bodyS).foregroundStyle(Theme.text)
+                    Spacer()
+                    Text("市价触发").font(Theme.caption).foregroundStyle(Theme.text3)
+                }
+                targetRow(title: "止盈", on: $tpOn, text: $tpText, pct: $tpPct, color: Theme.green, isTP: true) { order.wrappedValue.takeProfit = $0 }
+                targetRow(title: "止损", on: $slOn, text: $slText, pct: $slPct, color: Theme.red, isTP: false) { order.wrappedValue.stopLoss = $0 }
             }
-        }.padding(14).background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+        }
     }
 
-    private var tpslCard: some View {
-        VStack(spacing: 12) {
-            targetRow(title: "止盈 TP", on: $tpOn, text: $tpText, pct: $tpPct, color: Theme.green) { order.wrappedValue.takeProfit = $0 }
-            Divider().overlay(Theme.card2)
-            targetRow(title: "止损 SL", on: $slOn, text: $slText, pct: $slPct, color: Theme.red) { order.wrappedValue.stopLoss = $0 }
-        }.padding(14).background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
-    }
-
-    private func targetRow(title: String, on: Binding<Bool>, text: Binding<String>, pct: Binding<Bool>, color: Color,
+    private func targetRow(title: String, on: Binding<Bool>, text: Binding<String>, pct: Binding<Bool>, color: Color, isTP: Bool,
                            apply: @escaping (PriceTarget?) -> Void) -> some View {
         VStack(spacing: 8) {
-            Toggle(isOn: on) { Text(title).foregroundStyle(color).bold() }.tint(color)
-            if on.wrappedValue {
-                HStack {
-                    TextField(pct.wrappedValue ? "5" : "价格", text: text).keyboardType(.decimalPad).font(.body.bold())
-                    Picker("", selection: pct) { Text("价格").tag(false); Text("%").tag(true) }
-                        .pickerStyle(.segmented).frame(width: 120)
-                }
-                if let m = mark, let v = Double(text.wrappedValue) {
+            HStack {
+                Button { on.wrappedValue.toggle() } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: on.wrappedValue ? "checkmark.square.fill" : "square")
+                            .foregroundStyle(on.wrappedValue ? Theme.brand : Theme.text3)
+                        Text(title).font(Theme.body).foregroundStyle(Theme.text)
+                    }
+                }.buttonStyle(.plain)
+                Spacer()
+                if on.wrappedValue, let m = mark, let v = Double(text.wrappedValue) {
                     let t: PriceTarget = pct.wrappedValue ? .percent(v) : .price(v)
-                    Text("触发价约 \(Fmt.price(t.resolved(entry: m, side: order.wrappedValue.side, isTakeProfit: title.hasPrefix("止盈"))))")
-                        .font(.caption).foregroundStyle(Theme.text2).frame(maxWidth: .infinity, alignment: .leading)
+                    Text("触发 \(Fmt.price(t.resolved(entry: m, side: o.side, isTakeProfit: isTP)))")
+                        .font(Theme.caption).foregroundStyle(color)
+                }
+            }
+            if on.wrappedValue {
+                HStack(spacing: 8) {
+                    HStack {
+                        TextField("", text: text, prompt: Text(pct.wrappedValue ? "0" : "价格").foregroundStyle(Theme.text4))
+                            .keyboardType(.decimalPad).font(Theme.num).foregroundStyle(Theme.text)
+                        Text(pct.wrappedValue ? "%" : "USDT").font(Theme.body).foregroundStyle(Theme.text3)
+                    }
+                    .padding(.horizontal, 12).frame(height: 40)
+                    .background(Theme.card2, in: RoundedRectangle(cornerRadius: Theme.r4))
+                    BinanceSegment(items: [(false, "价格"), (true, "%")], selection: pct, activeFg: { _ in Theme.brand }, height: 40)
+                        .frame(width: 120)
                 }
             }
         }
         .modifier(ApplyOnChange(on: on, text: text, pct: pct, apply: apply))
     }
 
+    // MARK: 底部提交(Binance 买/卖按钮:多为绿、空为红,白字)
+
     private var submitBar: some View {
-        VStack(spacing: 10) {
-            if busy {
-                HStack(spacing: 10) {
-                    ProgressView().tint(Theme.yellow)
-                    Text(state.stage == .authenticating ? "等待 \(BiometricService.kindName) 确认…" : "正在提交到 Binance…")
-                }.font(.subheadline).frame(maxWidth: .infinity).padding(.vertical, 16)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
-            } else {
-                Button { state.confirmAndSubmit() } label: {
-                    if state.requireBiometrics { Label("提交 · \(BiometricService.kindName) 确认", systemImage: "faceid") }
-                    else { Label("提交下单", systemImage: "paperplane.fill") }
+        VStack(spacing: 0) {
+            Rectangle().fill(Theme.line).frame(height: 1)
+            Group {
+                if busy {
+                    HStack(spacing: 10) {
+                        ProgressView().tint(Theme.brand)
+                        Text(state.stage == .authenticating ? "等待 \(BiometricService.kindName) 确认…" : "正在提交到 Binance…")
+                            .font(Theme.bodyM).foregroundStyle(Theme.text2)
+                    }.frame(maxWidth: .infinity).frame(height: 48)
+                    .background(Theme.card2, in: RoundedRectangle(cornerRadius: Theme.r8))
+                } else {
+                    Button { state.confirmAndSubmit() } label: {
+                        HStack(spacing: 6) {
+                            if state.requireBiometrics { Image(systemName: "faceid") }
+                            Text(o.side == .long ? "买入 / 做多 \(o.baseAsset)" : "卖出 / 做空 \(o.baseAsset)")
+                        }
+                    }
+                    .buttonStyle(BinanceButton(fill: sideColor, fg: .white))
+                    .disabled(!o.missingFields.isEmpty)
+                    .opacity(o.missingFields.isEmpty ? 1 : 0.4)
                 }
-                .buttonStyle(PrimaryButton(color: order.wrappedValue.side == .long ? Theme.green : Theme.red))
-                .disabled(!order.wrappedValue.missingFields.isEmpty)
-                .opacity(order.wrappedValue.missingFields.isEmpty ? 1 : 0.4)
             }
-        }.padding(20).background(Theme.bg)
+            .padding(.horizontal, 16).padding(.top, 12).padding(.bottom, 8)
+        }
+        .background(Theme.bg)
     }
 
-    private func row<C: View>(_ title: String, @ViewBuilder content: () -> C) -> some View {
-        HStack { Text(title).foregroundStyle(Theme.text2); Spacer(); content() }
+    private func kv(_ k: String, _ v: String) -> some View {
+        HStack { Text(k).font(Theme.caption).foregroundStyle(Theme.text3); Spacer(); Text(v).font(Theme.captionM).foregroundStyle(Theme.text2) }
     }
 
     private func syncFromDraft() {
