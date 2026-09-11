@@ -31,6 +31,8 @@ final class AppState: ObservableObject {
     @Published var agentNotes: [String] = []
     @Published var confidence: Double = 0
     @Published var manualText = ""
+    @AppStorage("requireBiometrics") var requireBiometrics = false
+    @Published var showSettings = false
 
     let speech = SpeechService()
     let orders = OrderService()
@@ -76,18 +78,21 @@ final class AppState: ObservableObject {
         handleTranscript(t)
     }
 
-    /// 用户点击"提交" → Face ID → 下单 → 通知
+    /// 用户点击"提交" → (可选 Face ID) → 下单 → 通知
     func confirmAndSubmit() {
         guard let order = draft, order.missingFields.isEmpty else { return }
-        stage = .authenticating
         Task {
-            let outcome = await BiometricService.authenticate(reason: "确认下单:\(order.summary)")
-            switch outcome {
-            case .cancelled: stage = .confirm
-            case .failed(let msg): stage = .failed(msg)
-            case .success:
-                stage = .submitting
-                do {
+            if requireBiometrics {
+                stage = .authenticating
+                let outcome = await BiometricService.authenticate(reason: "确认下单:\(order.summary)")
+                switch outcome {
+                case .cancelled: stage = .confirm; return
+                case .failed(let msg): stage = .failed(msg); return
+                case .success: break
+                }
+            }
+            stage = .submitting
+            do {
                     let filled = try await orders.submit(order)
                     NotificationService.shared.notifyFilled(filled)
                     stage = .success(filled)
@@ -95,8 +100,17 @@ final class AppState: ObservableObject {
                     NotificationService.shared.notifyFailed(order, reason: error.localizedDescription)
                     stage = .failed(error.localizedDescription)
                 }
-            }
         }
+    }
+
+    /// 灵动岛「修改」/「下单(Face ID)」深链接
+    func handle(url: URL) {
+        guard url.scheme == "binancevoice", let d = IslandFlow.shared.takeOverInApp() else { return }
+        draft = d
+        let r = CommandParser().parse(d.rawTranscript)
+        agentNotes = r.notes; confidence = r.confidence
+        stage = .confirm
+        if url.host == "submit" { confirmAndSubmit() }
     }
 
     func reset() { draft = nil; agentNotes = []; stage = .idle }

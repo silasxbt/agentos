@@ -8,38 +8,79 @@
 
 /* Begin PBXBuildFile section */
 		03A5D532A2B3328CADBC2A3E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5E020C95084C3BBF6EB7488 /* RootView.swift */; };
+		0A79A1B4F875248A100CF5C3 /* TradeActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06D24B264A91B1CBD35F472 /* TradeActivityAttributes.swift */; };
 		0F7BF0BDCB7F82064EECCA15 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55C77EF929F9162BAA87D75D /* ResultView.swift */; };
+		1282FEFED2538ED6426469AD /* TradeActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06D24B264A91B1CBD35F472 /* TradeActivityAttributes.swift */; };
 		18B31FA28E1681632AB813B7 /* ConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9E4DB757A8AD8D6C22DC82 /* ConfirmView.swift */; };
+		1FFFB0ED5819016DB1A1A8B2 /* IslandIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB07E4A014A64E176A3FA9D4 /* IslandIntents.swift */; };
 		2CD46A7E3121772DE04BE387 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6A8EC1837783838C36527AAE /* Assets.xcassets */; };
+		3B96DB7618F48493F8302B2B /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E007B2E67CBB240E8DE6FEE /* Theme.swift */; };
+		4FE3F54110A1C3E565876F35 /* TradeLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9289F3B187010068CC9CB09 /* TradeLiveActivity.swift */; };
 		5FAA062F7FC5430DF668AE80 /* TradeOrder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773C6C2FF176C7272143007 /* TradeOrder.swift */; };
 		62D42ABA078955D77634CA27 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA345900F9C7CE6FBE443AA /* NotificationService.swift */; };
 		77F3044E9DACA4EE71FE0C99 /* CommandParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89B239C6D10588669C223711 /* CommandParser.swift */; };
 		AAD1136E2E474978F27BEA4A /* ListeningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0B72B17826866F82704A381 /* ListeningView.swift */; };
+		BB5377EBFCB00607824DBC2C /* IslandFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CFA710B00D94ADCFD91008 /* IslandFlow.swift */; };
 		BC200926F8B0FE3E3AA9CDCE /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00D91CEF1BB58F7FE43588BA /* SpeechService.swift */; };
 		C361974F5CD6CC23D6E34967 /* BiometricService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7991B117169F0DC54376EA99 /* BiometricService.swift */; };
 		C6371CB95852A1940D4CC304 /* VoiceTradeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28160A9740ACF5D9116F6103 /* VoiceTradeIntent.swift */; };
+		C8FDCD03665E98DB777903FB /* BinanceVoiceWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = ED239E0A1849B9300339C4AD /* BinanceVoiceWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		CD9C71BAEA947DBFF5F9A36E /* TradeOrder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773C6C2FF176C7272143007 /* TradeOrder.swift */; };
+		D72E47708C17F4C0C769876C /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E007B2E67CBB240E8DE6FEE /* Theme.swift */; };
 		DFFB514810C0558B55BE2811 /* OrderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 542DA4AF3328654572FE38A9 /* OrderService.swift */; };
 		EF597C26D8CFAFF2F292822B /* BinanceVoiceAgentApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F3C11A8DE1A9E37A31CC8B /* BinanceVoiceAgentApp.swift */; };
 		F520A78320E39F3BC658F5D8 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC6C783D74B64564D2560F0 /* AppState.swift */; };
+		FB17F09658C484819430AA75 /* IslandIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB07E4A014A64E176A3FA9D4 /* IslandIntents.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5B951B848E28214E59B97C2A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9C25B2ECE9289748B2454AFF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C042AA0506BD5FD580431AEF;
+			remoteInfo = BinanceVoiceWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F895C4A759768F0E2C4F35E5 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C8FDCD03665E98DB777903FB /* BinanceVoiceWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		00D91CEF1BB58F7FE43588BA /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
+		0E007B2E67CBB240E8DE6FEE /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		1199F1ACA55D9C772025301E /* BinanceVoiceAgent.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BinanceVoiceAgent.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1CA345900F9C7CE6FBE443AA /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		2773C6C2FF176C7272143007 /* TradeOrder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeOrder.swift; sourceTree = "<group>"; };
 		28160A9740ACF5D9116F6103 /* VoiceTradeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceTradeIntent.swift; sourceTree = "<group>"; };
 		2A39E250077EB8EC347F35BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		542DA4AF3328654572FE38A9 /* OrderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderService.swift; sourceTree = "<group>"; };
+		54CFA710B00D94ADCFD91008 /* IslandFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandFlow.swift; sourceTree = "<group>"; };
 		55C77EF929F9162BAA87D75D /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
 		6A8EC1837783838C36527AAE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7991B117169F0DC54376EA99 /* BiometricService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricService.swift; sourceTree = "<group>"; };
 		7A9E4DB757A8AD8D6C22DC82 /* ConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfirmView.swift; sourceTree = "<group>"; };
 		7BC6C783D74B64564D2560F0 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		89B239C6D10588669C223711 /* CommandParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandParser.swift; sourceTree = "<group>"; };
+		8D71943DE07EFE502CFBA85E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A9289F3B187010068CC9CB09 /* TradeLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeLiveActivity.swift; sourceTree = "<group>"; };
 		C5E020C95084C3BBF6EB7488 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		D06D24B264A91B1CBD35F472 /* TradeActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeActivityAttributes.swift; sourceTree = "<group>"; };
 		E0B72B17826866F82704A381 /* ListeningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningView.swift; sourceTree = "<group>"; };
 		E7F3C11A8DE1A9E37A31CC8B /* BinanceVoiceAgentApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinanceVoiceAgentApp.swift; sourceTree = "<group>"; };
+		ED239E0A1849B9300339C4AD /* BinanceVoiceWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = BinanceVoiceWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB07E4A014A64E176A3FA9D4 /* IslandIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandIntents.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -48,6 +89,7 @@
 			children = (
 				7991B117169F0DC54376EA99 /* BiometricService.swift */,
 				89B239C6D10588669C223711 /* CommandParser.swift */,
+				54CFA710B00D94ADCFD91008 /* IslandFlow.swift */,
 				1CA345900F9C7CE6FBE443AA /* NotificationService.swift */,
 				542DA4AF3328654572FE38A9 /* OrderService.swift */,
 				00D91CEF1BB58F7FE43588BA /* SpeechService.swift */,
@@ -65,6 +107,7 @@
 				CA26B826B456006B4503AEBA /* Intents */,
 				D2301E70C0E7E1EFBE4F26EF /* Models */,
 				00824197850DABF451BD94A6 /* Services */,
+				53A296D7D245A32DAC9BF121 /* Shared */,
 				64D8A250B72717BE3EB8460E /* Views */,
 			);
 			path = BinanceVoiceAgent;
@@ -74,8 +117,19 @@
 			isa = PBXGroup;
 			children = (
 				1199F1ACA55D9C772025301E /* BinanceVoiceAgent.app */,
+				ED239E0A1849B9300339C4AD /* BinanceVoiceWidget.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		53A296D7D245A32DAC9BF121 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				FB07E4A014A64E176A3FA9D4 /* IslandIntents.swift */,
+				0E007B2E67CBB240E8DE6FEE /* Theme.swift */,
+				D06D24B264A91B1CBD35F472 /* TradeActivityAttributes.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		64D8A250B72717BE3EB8460E /* Views */ = {
@@ -97,6 +151,15 @@
 			path = Intents;
 			sourceTree = "<group>";
 		};
+		CBE0289E0719371B9383A741 /* BinanceVoiceWidget */ = {
+			isa = PBXGroup;
+			children = (
+				8D71943DE07EFE502CFBA85E /* Info.plist */,
+				A9289F3B187010068CC9CB09 /* TradeLiveActivity.swift */,
+			);
+			path = BinanceVoiceWidget;
+			sourceTree = "<group>";
+		};
 		D2301E70C0E7E1EFBE4F26EF /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -109,6 +172,7 @@
 			isa = PBXGroup;
 			children = (
 				39461093E415896B7B08E966 /* BinanceVoiceAgent */,
+				CBE0289E0719371B9383A741 /* BinanceVoiceWidget */,
 				3ADF1913B90C43A25DC950E6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -122,10 +186,12 @@
 			buildPhases = (
 				9FE427A99953B29FF678ED55 /* Sources */,
 				F2A63B4E4142031EAD5DA1A5 /* Resources */,
+				F895C4A759768F0E2C4F35E5 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				9F888F13521462C6F9CE10BC /* PBXTargetDependency */,
 			);
 			name = BinanceVoiceAgent;
 			packageProductDependencies = (
@@ -133,6 +199,23 @@
 			productName = BinanceVoiceAgent;
 			productReference = 1199F1ACA55D9C772025301E /* BinanceVoiceAgent.app */;
 			productType = "com.apple.product-type.application";
+		};
+		C042AA0506BD5FD580431AEF /* BinanceVoiceWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A9C7D161E84B29A799FFEDE5 /* Build configuration list for PBXNativeTarget "BinanceVoiceWidget" */;
+			buildPhases = (
+				6F78CDBBB064DC2E5A42F9B0 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BinanceVoiceWidget;
+			packageProductDependencies = (
+			);
+			productName = BinanceVoiceWidget;
+			productReference = ED239E0A1849B9300339C4AD /* BinanceVoiceWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -144,6 +227,9 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					9210D44BB598BA4566EF023F = {
+						ProvisioningStyle = Automatic;
+					};
+					C042AA0506BD5FD580431AEF = {
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -163,6 +249,7 @@
 			projectRoot = "";
 			targets = (
 				9210D44BB598BA4566EF023F /* BinanceVoiceAgent */,
+				C042AA0506BD5FD580431AEF /* BinanceVoiceWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -179,6 +266,18 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		6F78CDBBB064DC2E5A42F9B0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1FFFB0ED5819016DB1A1A8B2 /* IslandIntents.swift in Sources */,
+				D72E47708C17F4C0C769876C /* Theme.swift in Sources */,
+				1282FEFED2538ED6426469AD /* TradeActivityAttributes.swift in Sources */,
+				4FE3F54110A1C3E565876F35 /* TradeLiveActivity.swift in Sources */,
+				CD9C71BAEA947DBFF5F9A36E /* TradeOrder.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9FE427A99953B29FF678ED55 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -188,18 +287,30 @@
 				C361974F5CD6CC23D6E34967 /* BiometricService.swift in Sources */,
 				77F3044E9DACA4EE71FE0C99 /* CommandParser.swift in Sources */,
 				18B31FA28E1681632AB813B7 /* ConfirmView.swift in Sources */,
+				BB5377EBFCB00607824DBC2C /* IslandFlow.swift in Sources */,
+				FB17F09658C484819430AA75 /* IslandIntents.swift in Sources */,
 				AAD1136E2E474978F27BEA4A /* ListeningView.swift in Sources */,
 				62D42ABA078955D77634CA27 /* NotificationService.swift in Sources */,
 				DFFB514810C0558B55BE2811 /* OrderService.swift in Sources */,
 				0F7BF0BDCB7F82064EECCA15 /* ResultView.swift in Sources */,
 				03A5D532A2B3328CADBC2A3E /* RootView.swift in Sources */,
 				BC200926F8B0FE3E3AA9CDCE /* SpeechService.swift in Sources */,
+				3B96DB7618F48493F8302B2B /* Theme.swift in Sources */,
+				0A79A1B4F875248A100CF5C3 /* TradeActivityAttributes.swift in Sources */,
 				5FAA062F7FC5430DF668AE80 /* TradeOrder.swift in Sources */,
 				C6371CB95852A1940D4CC304 /* VoiceTradeIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9F888F13521462C6F9CE10BC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C042AA0506BD5FD580431AEF /* BinanceVoiceWidget */;
+			targetProxy = 5B951B848E28214E59B97C2A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0B319DC038831CB9C54332F4 /* Debug */ = {
@@ -235,6 +346,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -273,7 +385,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = BinanceVoiceAgent/Info.plist;
@@ -321,6 +432,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -352,7 +464,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = BinanceVoiceAgent/Info.plist;
@@ -366,6 +477,42 @@
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
+		};
+		867481B57FCD7992764B97F2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BinanceVoiceWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.hackathon.BinanceVoiceAgent.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) WIDGET";
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		A71733F3F4499DA021C5BBA9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BinanceVoiceWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.hackathon.BinanceVoiceAgent.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) WIDGET";
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
@@ -384,6 +531,15 @@
 			buildConfigurations = (
 				0B319DC038831CB9C54332F4 /* Debug */,
 				4856008F93722EB081BF2472 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A9C7D161E84B29A799FFEDE5 /* Build configuration list for PBXNativeTarget "BinanceVoiceWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				867481B57FCD7992764B97F2 /* Debug */,
+				A71733F3F4499DA021C5BBA9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

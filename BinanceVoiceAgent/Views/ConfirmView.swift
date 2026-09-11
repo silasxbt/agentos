@@ -154,7 +154,8 @@ struct ConfirmView: View {
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
             } else {
                 Button { state.confirmAndSubmit() } label: {
-                    Label("提交 · \(BiometricService.kindName) 确认", systemImage: "faceid")
+                    if state.requireBiometrics { Label("提交 · \(BiometricService.kindName) 确认", systemImage: "faceid") }
+                    else { Label("提交下单", systemImage: "paperplane.fill") }
                 }
                 .buttonStyle(PrimaryButton(color: order.wrappedValue.side == .long ? Theme.green : Theme.red))
                 .disabled(!order.wrappedValue.missingFields.isEmpty)

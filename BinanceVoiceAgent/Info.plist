@@ -20,6 +20,12 @@
 	<key>NSSpeechRecognitionUsageDescription</key><string>用于将您的语音指令转换为交易参数</string>
 	<key>NSMicrophoneUsageDescription</key><string>用于听写交易指令</string>
 	<key>NSFaceIDUsageDescription</key><string>提交订单前需要 Face ID 确认</string>
+	<key>NSSupportsLiveActivities</key><true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key><true/>
+	<key>CFBundleURLTypes</key><array><dict>
+		<key>CFBundleURLName</key><string>com.hackathon.BinanceVoiceAgent</string>
+		<key>CFBundleURLSchemes</key><array><string>binancevoice</string></array>
+	</dict></array>
 	<key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><false/></dict>
 </dict>
 </plist>

@@ -14,7 +14,7 @@ enum MarginMode: String, Codable, CaseIterable, Identifiable {
 }
 
 /// 止盈/止损可以是绝对价格,也可以是相对开仓价的百分比
-enum PriceTarget: Codable, Equatable {
+enum PriceTarget: Codable, Hashable {
     case price(Double)
     case percent(Double)
 
@@ -35,7 +35,7 @@ enum PriceTarget: Codable, Equatable {
     }
 }
 
-struct TradeOrder: Codable, Identifiable, Equatable {
+struct TradeOrder: Codable, Identifiable, Hashable {
     var id = UUID()
     var symbol: String                 // e.g. BTCUSDT
     var side: TradeSide

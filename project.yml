@@ -10,11 +10,15 @@ settings:
     SWIFT_STRICT_CONCURRENCY: minimal
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
 targets:
   BinanceVoiceAgent:
     type: application
     platform: iOS
     sources: [BinanceVoiceAgent]
+    dependencies:
+      - target: BinanceVoiceWidget
+        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.hackathon.BinanceVoiceAgent
@@ -22,6 +26,20 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         TARGETED_DEVICE_FAMILY: "1"
         SUPPORTS_MACCATALYST: NO
-        CODE_SIGN_STYLE: Automatic
         ENABLE_PREVIEWS: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  BinanceVoiceWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: BinanceVoiceWidget
+      - path: BinanceVoiceAgent/Models/TradeOrder.swift
+      - path: BinanceVoiceAgent/Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hackathon.BinanceVoiceAgent.widget
+        INFOPLIST_FILE: BinanceVoiceWidget/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) WIDGET"
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1"
