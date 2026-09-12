@@ -11,6 +11,8 @@ settings:
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
     CODE_SIGN_STYLE: Automatic
+    # App Shortcuts 需要带 Team ID 的签名(linkd 校验 teamId);模拟器也一样
+    DEVELOPMENT_TEAM: 85VUQRKU57
     # Xcode 16+ 的 debug dylib 会让 AppIntents 运行时找不到 AppShortcutsProvider("Something went wrong")
     ENABLE_DEBUG_DYLIB: NO
 targets:
@@ -32,6 +34,7 @@ targets:
         SUPPORTS_MACCATALYST: NO
         ENABLE_PREVIEWS: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: BinanceVoiceAgent/BinanceVoiceAgent.entitlements
   BinanceVoiceWidget:
     type: app-extension
     platform: iOS

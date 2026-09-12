@@ -77,6 +77,7 @@
 		7BC6C783D74B64564D2560F0 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		89B239C6D10588669C223711 /* CommandParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandParser.swift; sourceTree = "<group>"; };
 		8D71943DE07EFE502CFBA85E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		988CCFA7B084365E2397A288 /* BinanceVoiceAgent.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BinanceVoiceAgent.entitlements; sourceTree = "<group>"; };
 		A9289F3B187010068CC9CB09 /* TradeLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeLiveActivity.swift; sourceTree = "<group>"; };
 		C5E020C95084C3BBF6EB7488 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		D06D24B264A91B1CBD35F472 /* TradeActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeActivityAttributes.swift; sourceTree = "<group>"; };
@@ -107,6 +108,7 @@
 			children = (
 				7BC6C783D74B64564D2560F0 /* AppState.swift */,
 				6A8EC1837783838C36527AAE /* Assets.xcassets */,
+				988CCFA7B084365E2397A288 /* BinanceVoiceAgent.entitlements */,
 				E7F3C11A8DE1A9E37A31CC8B /* BinanceVoiceAgentApp.swift */,
 				2A39E250077EB8EC347F35BD /* Info.plist */,
 				5F4D8818D7EC0C6398CD0861 /* Config */,
@@ -241,9 +243,11 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					9210D44BB598BA4566EF023F = {
+						DevelopmentTeam = 85VUQRKU57;
 						ProvisioningStyle = Automatic;
 					};
 					C042AA0506BD5FD580431AEF = {
+						DevelopmentTeam = 85VUQRKU57;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -366,6 +370,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 85VUQRKU57;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -401,6 +406,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = BinanceVoiceAgent/BinanceVoiceAgent.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -453,6 +459,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 85VUQRKU57;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -481,6 +488,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = BinanceVoiceAgent/BinanceVoiceAgent.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
