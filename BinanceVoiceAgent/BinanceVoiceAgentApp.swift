@@ -1,3 +1,4 @@
+import AppIntents
 import SwiftUI
 
 @main
@@ -6,7 +7,7 @@ struct BinanceVoiceAgentApp: App {
 
     init() {
         NotificationService.shared.setup()
-        BinanceShortcuts.updateAppShortcutParameters()
+        TradeShortcuts.updateAppShortcutParameters()
     }
 
     var body: some Scene {

@@ -9,9 +9,9 @@ import SwiftUI
 /// 全局语音:快捷指令 = 「听写文本」→ 本 Intent → 灵动岛确认
 /// 绑定到 Action Button 后,在 Coinglass / TradingView 等任意界面按键即可。
 struct VoiceTradeIntent: AppIntent {
-    static var title: LocalizedStringResource = "全局语音下单(Apple 听写)"
-    static var description = IntentDescription("接收「听写文本」的交易指令,解析后在灵动岛确认,不打开 App")
-    static var openAppWhenRun = false
+    static let title: LocalizedStringResource = "全局语音下单(Apple 听写)"
+    static let description = IntentDescription("接收「听写文本」的交易指令,解析后在灵动岛确认,不打开 App")
+    static let openAppWhenRun = false
 
     /// 可选:为空时(例如 Action Button 直接触发)由系统弹出输入框/语音请求。
     /// App Shortcut 必须能零输入运行,否则绑定 Action Button 会报 "Something went wrong"。
@@ -33,9 +33,9 @@ struct VoiceTradeIntent: AppIntent {
 
 /// 增强语音:快捷指令「录制音频」→ 音频文件 → DashScope Qwen ASR → 灵动岛,不打开 App
 struct EnhancedVoiceTradeIntent: AppIntent {
-    static var title: LocalizedStringResource = "增强语音下单(Qwen 转写)"
-    static var description = IntentDescription("接收「录制音频」的录音文件,用 Qwen 云端转写后在灵动岛确认,不打开 App")
-    static var openAppWhenRun = false
+    static let title: LocalizedStringResource = "增强语音下单(Qwen 转写)"
+    static let description = IntentDescription("接收「录制音频」的录音文件,用 Qwen 云端转写后在灵动岛确认,不打开 App")
+    static let openAppWhenRun = false
 
     @Parameter(title: "录音文件", description: "来自快捷指令「录制音频」动作的输出", supportedTypeIdentifiers: ["public.audio"])
     var audio: IntentFile?
@@ -63,9 +63,9 @@ struct EnhancedVoiceTradeIntent: AppIntent {
 
 /// 内置语音:打开 App,App 内录音 → Qwen ASR → 确认页
 struct StartVoiceTradeIntent: AppIntent {
-    static var title: LocalizedStringResource = "内置语音下单(打开 App)"
-    static var description = IntentDescription("打开 Binance Voice 并立即开始录音,由 App 内 Qwen 转写")
-    static var openAppWhenRun = true
+    static let title: LocalizedStringResource = "内置语音下单(打开 App)"
+    static let description = IntentDescription("打开 Binance Voice 并立即开始录音,由 App 内 Qwen 转写")
+    static let openAppWhenRun = true
 
     @MainActor
     func perform() async throws -> some IntentResult {
@@ -74,7 +74,7 @@ struct StartVoiceTradeIntent: AppIntent {
     }
 }
 
-struct BinanceShortcuts: AppShortcutsProvider {
+struct TradeShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: StartVoiceTradeIntent(),
                     phrases: ["打开\(.applicationName)", "用\(.applicationName)下单", "\(.applicationName)语音交易"],
@@ -86,5 +86,5 @@ struct BinanceShortcuts: AppShortcutsProvider {
                     phrases: ["\(.applicationName)增强语音下单"],
                     shortTitle: "增强语音", systemImageName: "sparkles")
     }
-    static var shortcutTileColor: ShortcutTileColor = .yellow
+    static let shortcutTileColor: ShortcutTileColor = .yellow
 }

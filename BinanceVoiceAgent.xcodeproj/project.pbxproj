@@ -21,7 +21,6 @@
 		5FAA062F7FC5430DF668AE80 /* TradeOrder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773C6C2FF176C7272143007 /* TradeOrder.swift */; };
 		62D42ABA078955D77634CA27 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA345900F9C7CE6FBE443AA /* NotificationService.swift */; };
 		77F3044E9DACA4EE71FE0C99 /* CommandParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89B239C6D10588669C223711 /* CommandParser.swift */; };
-		967796C461884A4155AA1E32 /* Secrets.example.swift.template in Resources */ = {isa = PBXBuildFile; fileRef = AB00F2DD99C46976E0B38FB1 /* Secrets.example.swift.template */; };
 		AAD1136E2E474978F27BEA4A /* ListeningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0B72B17826866F82704A381 /* ListeningView.swift */; };
 		BB5377EBFCB00607824DBC2C /* IslandFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CFA710B00D94ADCFD91008 /* IslandFlow.swift */; };
 		BC200926F8B0FE3E3AA9CDCE /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00D91CEF1BB58F7FE43588BA /* SpeechService.swift */; };
@@ -79,7 +78,6 @@
 		89B239C6D10588669C223711 /* CommandParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandParser.swift; sourceTree = "<group>"; };
 		8D71943DE07EFE502CFBA85E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A9289F3B187010068CC9CB09 /* TradeLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeLiveActivity.swift; sourceTree = "<group>"; };
-		AB00F2DD99C46976E0B38FB1 /* Secrets.example.swift.template */ = {isa = PBXFileReference; path = Secrets.example.swift.template; sourceTree = "<group>"; };
 		C5E020C95084C3BBF6EB7488 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		D06D24B264A91B1CBD35F472 /* TradeActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeActivityAttributes.swift; sourceTree = "<group>"; };
 		E0B72B17826866F82704A381 /* ListeningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningView.swift; sourceTree = "<group>"; };
@@ -143,7 +141,6 @@
 		5F4D8818D7EC0C6398CD0861 /* Config */ = {
 			isa = PBXGroup;
 			children = (
-				AB00F2DD99C46976E0B38FB1 /* Secrets.example.swift.template */,
 				F91AA831B690B440237D5D29 /* Secrets.swift */,
 			);
 			path = Config;
@@ -277,7 +274,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				2CD46A7E3121772DE04BE387 /* Assets.xcassets in Resources */,
-				967796C461884A4155AA1E32 /* Secrets.example.swift.template in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -370,6 +366,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -456,6 +453,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;

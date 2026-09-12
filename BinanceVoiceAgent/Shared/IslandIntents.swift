@@ -2,9 +2,9 @@ import AppIntents
 
 /// 灵动岛「下单」:后台直接提交(Face ID 关闭时)
 struct SubmitFromIslandIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "灵动岛下单"
-    static var openAppWhenRun = false
-    static var isDiscoverable = false
+    static let title: LocalizedStringResource = "灵动岛下单"
+    static let openAppWhenRun = false
+    static let isDiscoverable = false
 
     func perform() async throws -> some IntentResult {
         #if !WIDGET
@@ -16,9 +16,9 @@ struct SubmitFromIslandIntent: LiveActivityIntent {
 
 /// 灵动岛「取消」
 struct CancelFromIslandIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "取消订单"
-    static var openAppWhenRun = false
-    static var isDiscoverable = false
+    static let title: LocalizedStringResource = "取消订单"
+    static let openAppWhenRun = false
+    static let isDiscoverable = false
 
     func perform() async throws -> some IntentResult {
         #if !WIDGET
