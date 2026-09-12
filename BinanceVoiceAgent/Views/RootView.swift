@@ -244,10 +244,25 @@ typealias PrimaryButton = BinanceButton
 struct SettingsView: View {
     @EnvironmentObject var state: AppState
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("dashScopeAPIKey") private var apiKeyOverride = ""
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 12) {
+                    group("语音转写模型") {
+                        VStack(alignment: .leading, spacing: 10) {
+                            kv("提供方", "阿里云百炼 DashScope")
+                            kv("模型", DashScopeASR.model, last: true)
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("API Key 覆盖(留空则使用 Config/Secrets.swift)").font(Theme.caption).foregroundStyle(Theme.text3)
+                                SecureField("sk-…", text: $apiKeyOverride)
+                                    .font(Theme.body).foregroundStyle(Theme.text)
+                                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                                    .padding(.horizontal, 12).frame(height: 40)
+                                    .background(Theme.card2, in: RoundedRectangle(cornerRadius: Theme.r4))
+                            }.padding(.horizontal, 16).padding(.bottom, 16)
+                        }
+                    }
                     group("安全") {
                         HStack(alignment: .top, spacing: 12) {
                             VStack(alignment: .leading, spacing: 4) {
@@ -272,6 +287,7 @@ struct SettingsView: View {
                     group("关于") {
                         VStack(spacing: 0) {
                             kv("下单通道", "模拟 USDⓈ-M 合约")
+                            kv("语音识别", "Qwen ASR(不使用苹果语音)")
                             kv("版本", "1.0", last: true)
                         }
                     }

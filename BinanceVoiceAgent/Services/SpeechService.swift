@@ -1,29 +1,30 @@
 import Foundation
-import Speech
 import AVFoundation
 
+/// 录音 → 16kHz 单声道 WAV → DashScope qwen-audio-3.0-asr-flash-filetrans 转写。
+/// 不使用苹果 SFSpeechRecognizer。对外接口与旧版保持一致。
 @MainActor
 final class SpeechService: NSObject, ObservableObject {
     @Published var transcript = ""
     @Published var isListening = false
+    @Published var isTranscribing = false   // 上传 + 云端转写中
     @Published var level: Float = 0          // 0~1 音量,用于波形动画
     @Published var errorMessage: String?
 
-    private var recognizer: SFSpeechRecognizer?
-    private var request: SFSpeechAudioBufferRecognitionRequest?
-    private var task: SFSpeechRecognitionTask?
     private let engine = AVAudioEngine()
+    private var file: AVAudioFile?
+    private var fileURL: URL?
     private var silenceTimer: Timer?
+    private var heardSpeech = false
+    private var maxTimer: Timer?
     var onFinal: ((String) -> Void)?
 
-    override init() {
-        super.init()
-        recognizer = SFSpeechRecognizer(locale: Locale(identifier: "zh-CN")) ?? SFSpeechRecognizer()
-    }
+    private static let sampleRate: Double = 16_000
+    private static let silenceThreshold: Float = 0.06   // rms(放大后)低于此视为静音
+    private static let silenceWindow: TimeInterval = 1.6
+    private static let maxDuration: TimeInterval = 30
 
     func requestPermissions() async -> Bool {
-        let speech = await withCheckedContinuation { c in SFSpeechRecognizer.requestAuthorization { c.resume(returning: $0) } }
-        guard speech == .authorized else { errorMessage = "语音识别未授权"; return false }
         let mic: Bool
         if #available(iOS 17.0, *) { mic = await AVAudioApplication.requestRecordPermission() }
         else { mic = await withCheckedContinuation { c in AVAudioSession.sharedInstance().requestRecordPermission { c.resume(returning: $0) } } }
@@ -32,56 +33,70 @@ final class SpeechService: NSObject, ObservableObject {
     }
 
     func start() {
-        guard !isListening else { return }
-        transcript = ""; errorMessage = nil
-        guard let recognizer, recognizer.isAvailable else { errorMessage = "语音识别当前不可用(模拟器请使用手动输入)"; return }
+        guard !isListening, !isTranscribing else { return }
+        transcript = ""; errorMessage = nil; heardSpeech = false
+        // 演示:-demoAudio /path.wav 直接走云端转写,不录音
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-demoAudio"), i + 1 < args.count {
+            transcribe(URL(fileURLWithPath: args[i + 1])); return
+        }
         do {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.record, mode: .measurement, options: .duckOthers)
             try session.setActive(true, options: .notifyOthersOnDeactivation)
 
-            let req = SFSpeechAudioBufferRecognitionRequest()
-            req.shouldReportPartialResults = true
-            if #available(iOS 16, *) { req.addsPunctuation = false }
-            if recognizer.supportsOnDeviceRecognition { req.requiresOnDeviceRecognition = false }
-            request = req
-
             let input = engine.inputNode
-            let format = input.outputFormat(forBus: 0)
+            let inFormat = input.outputFormat(forBus: 0)
+            guard inFormat.sampleRate > 0, inFormat.channelCount > 0 else {
+                errorMessage = "没有可用的麦克风输入(模拟器请使用手动输入)"; stopEngine(); return
+            }
+            let outFormat = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: Self.sampleRate, channels: 1, interleaved: true)!
+            let converter = AVAudioConverter(from: inFormat, to: outFormat)!
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("voice_\(Int(Date().timeIntervalSince1970)).wav")
+            try? FileManager.default.removeItem(at: url)
+            file = try AVAudioFile(forWriting: url, settings: outFormat.settings, commonFormat: .pcmFormatInt16, interleaved: true)
+            fileURL = url
+
             input.removeTap(onBus: 0)
-            input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
-                req.append(buffer)
+            input.installTap(onBus: 0, bufferSize: 2048, format: inFormat) { [weak self] buffer, _ in
                 let rms = Self.rms(buffer)
-                Task { @MainActor in self?.level = min(1, rms * 12) }
+                let ratio = outFormat.sampleRate / inFormat.sampleRate
+                let cap = AVAudioFrameCount(Double(buffer.frameLength) * ratio) + 16
+                guard let out = AVAudioPCMBuffer(pcmFormat: outFormat, frameCapacity: cap) else { return }
+                var done = false
+                var err: NSError?
+                converter.convert(to: out, error: &err) { _, status in
+                    if done { status.pointee = .noDataNow; return nil }
+                    done = true; status.pointee = .haveData; return buffer
+                }
+                Task { @MainActor in
+                    guard let self, self.isListening else { return }
+                    if err == nil, out.frameLength > 0 { try? self.file?.write(from: out) }
+                    self.level = min(1, rms * 12)
+                    self.onLevel(min(1, rms * 12))
+                }
             }
             engine.prepare(); try engine.start()
             isListening = true
-
-            task = recognizer.recognitionTask(with: req) { [weak self] result, error in
-                Task { @MainActor in
-                    guard let self else { return }
-                    if let result {
-                        self.transcript = result.bestTranscription.formattedString
-                        self.resetSilenceTimer()
-                        if result.isFinal { self.finish() }
-                    }
-                    if error != nil, self.isListening { self.finish() }
-                }
+            maxTimer = Timer.scheduledTimer(withTimeInterval: Self.maxDuration, repeats: false) { [weak self] _ in
+                Task { @MainActor in self?.finish() }
             }
-            resetSilenceTimer()
         } catch {
             errorMessage = "无法启动录音: \(error.localizedDescription)"
             stopEngine()
         }
     }
 
-    /// 停顿 1.6s 视为说完
-    private func resetSilenceTimer() {
-        silenceTimer?.invalidate()
-        silenceTimer = Timer.scheduledTimer(withTimeInterval: 1.6, repeats: false) { [weak self] _ in
-            Task { @MainActor in
-                guard let self, self.isListening, !self.transcript.isEmpty else { return }
-                self.finish()
+    /// 检测到说话后,静音 1.6s 视为说完
+    private func onLevel(_ l: Float) {
+        if l > Self.silenceThreshold {
+            heardSpeech = true
+            silenceTimer?.invalidate()
+            silenceTimer = Timer.scheduledTimer(withTimeInterval: Self.silenceWindow, repeats: false) { [weak self] _ in
+                Task { @MainActor in
+                    guard let self, self.isListening, self.heardSpeech else { return }
+                    self.finish()
+                }
             }
         }
     }
@@ -89,26 +104,44 @@ final class SpeechService: NSObject, ObservableObject {
     func finish() {
         guard isListening else { return }
         stopEngine()
-        let text = transcript
-        if !text.isEmpty { onFinal?(text) }
+        file = nil
+        guard let url = fileURL else { return }
+        transcribe(url)
     }
 
-    func cancel() { stopEngine(); transcript = "" }
+    private func transcribe(_ url: URL) {
+        isTranscribing = true
+        Task {
+            defer { isTranscribing = false }
+            do {
+                let text = try await DashScopeASR().transcribe(fileURL: url)
+                guard !Task.isCancelled, isTranscribing else { return }
+                transcript = text
+                onFinal?(text)
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    func cancel() { stopEngine(); file = nil; isTranscribing = false; transcript = "" }
 
     private func stopEngine() {
-        silenceTimer?.invalidate()
+        silenceTimer?.invalidate(); maxTimer?.invalidate()
         isListening = false; level = 0
-        request?.endAudio(); task?.cancel(); task = nil; request = nil
         if engine.isRunning { engine.stop() }
         engine.inputNode.removeTap(onBus: 0)
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
     nonisolated private static func rms(_ buffer: AVAudioPCMBuffer) -> Float {
-        guard let data = buffer.floatChannelData?[0] else { return 0 }
         let n = Int(buffer.frameLength); guard n > 0 else { return 0 }
         var sum: Float = 0
-        for i in 0..<n { sum += data[i] * data[i] }
+        if let data = buffer.floatChannelData?[0] {
+            for i in 0..<n { sum += data[i] * data[i] }
+        } else if let data = buffer.int16ChannelData?[0] {
+            for i in 0..<n { let v = Float(data[i]) / 32768; sum += v * v }
+        } else { return 0 }
         return sqrt(sum / Float(n))
     }
 }

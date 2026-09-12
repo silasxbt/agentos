@@ -15,6 +15,10 @@ struct ListeningView: View {
             if state.stage == .parsing {
                 ProgressView().controlSize(.large).tint(Theme.brand)
                 Text("Agent 正在理解指令…").font(Theme.h2).padding(.top, 16)
+            } else if state.speech.isTranscribing {
+                ProgressView().controlSize(.large).tint(Theme.brand)
+                Text("Qwen 语音转写中…").font(Theme.h2).padding(.top, 16)
+                Text("qwen-audio-3.0-asr-flash-filetrans").font(Theme.tiny).foregroundStyle(Theme.text3).padding(.top, 4)
             } else {
                 Waveform(level: state.speech.level, phase: phase)
                     .frame(height: 100).padding(.horizontal, 32)
@@ -31,7 +35,11 @@ struct ListeningView: View {
                 .frame(minHeight: 90)
 
             if let err = state.speech.errorMessage {
-                Text(err).font(Theme.caption).foregroundStyle(Theme.red).padding(.horizontal)
+                Text(err).font(Theme.caption).foregroundStyle(Theme.red).padding(.horizontal).multilineTextAlignment(.center)
+                HStack(spacing: 12) {
+                    Button("重试") { state.startListening() }.buttonStyle(SecondaryButton(height: 40))
+                    Button("手动输入") { state.cancelListening() }.buttonStyle(SecondaryButton(height: 40))
+                }.padding(.horizontal, 32).padding(.top, 12)
             }
 
             Spacer()

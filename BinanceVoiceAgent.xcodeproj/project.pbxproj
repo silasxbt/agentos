@@ -11,14 +11,17 @@
 		0A79A1B4F875248A100CF5C3 /* TradeActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06D24B264A91B1CBD35F472 /* TradeActivityAttributes.swift */; };
 		0F7BF0BDCB7F82064EECCA15 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55C77EF929F9162BAA87D75D /* ResultView.swift */; };
 		1282FEFED2538ED6426469AD /* TradeActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06D24B264A91B1CBD35F472 /* TradeActivityAttributes.swift */; };
+		159AD37FBF052529535C3BDA /* DashScopeASR.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721BF72998FA0382E756EC0B /* DashScopeASR.swift */; };
 		18B31FA28E1681632AB813B7 /* ConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9E4DB757A8AD8D6C22DC82 /* ConfirmView.swift */; };
 		1FFFB0ED5819016DB1A1A8B2 /* IslandIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB07E4A014A64E176A3FA9D4 /* IslandIntents.swift */; };
 		2CD46A7E3121772DE04BE387 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6A8EC1837783838C36527AAE /* Assets.xcassets */; };
+		2F4AE6498A29692C6CE2F81B /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91AA831B690B440237D5D29 /* Secrets.swift */; };
 		3B96DB7618F48493F8302B2B /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E007B2E67CBB240E8DE6FEE /* Theme.swift */; };
 		4FE3F54110A1C3E565876F35 /* TradeLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9289F3B187010068CC9CB09 /* TradeLiveActivity.swift */; };
 		5FAA062F7FC5430DF668AE80 /* TradeOrder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773C6C2FF176C7272143007 /* TradeOrder.swift */; };
 		62D42ABA078955D77634CA27 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA345900F9C7CE6FBE443AA /* NotificationService.swift */; };
 		77F3044E9DACA4EE71FE0C99 /* CommandParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89B239C6D10588669C223711 /* CommandParser.swift */; };
+		967796C461884A4155AA1E32 /* Secrets.example.swift.template in Resources */ = {isa = PBXBuildFile; fileRef = AB00F2DD99C46976E0B38FB1 /* Secrets.example.swift.template */; };
 		AAD1136E2E474978F27BEA4A /* ListeningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0B72B17826866F82704A381 /* ListeningView.swift */; };
 		BB5377EBFCB00607824DBC2C /* IslandFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CFA710B00D94ADCFD91008 /* IslandFlow.swift */; };
 		BC200926F8B0FE3E3AA9CDCE /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00D91CEF1BB58F7FE43588BA /* SpeechService.swift */; };
@@ -69,17 +72,20 @@
 		54CFA710B00D94ADCFD91008 /* IslandFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandFlow.swift; sourceTree = "<group>"; };
 		55C77EF929F9162BAA87D75D /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
 		6A8EC1837783838C36527AAE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		721BF72998FA0382E756EC0B /* DashScopeASR.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashScopeASR.swift; sourceTree = "<group>"; };
 		7991B117169F0DC54376EA99 /* BiometricService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricService.swift; sourceTree = "<group>"; };
 		7A9E4DB757A8AD8D6C22DC82 /* ConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfirmView.swift; sourceTree = "<group>"; };
 		7BC6C783D74B64564D2560F0 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		89B239C6D10588669C223711 /* CommandParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandParser.swift; sourceTree = "<group>"; };
 		8D71943DE07EFE502CFBA85E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A9289F3B187010068CC9CB09 /* TradeLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeLiveActivity.swift; sourceTree = "<group>"; };
+		AB00F2DD99C46976E0B38FB1 /* Secrets.example.swift.template */ = {isa = PBXFileReference; path = Secrets.example.swift.template; sourceTree = "<group>"; };
 		C5E020C95084C3BBF6EB7488 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		D06D24B264A91B1CBD35F472 /* TradeActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeActivityAttributes.swift; sourceTree = "<group>"; };
 		E0B72B17826866F82704A381 /* ListeningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningView.swift; sourceTree = "<group>"; };
 		E7F3C11A8DE1A9E37A31CC8B /* BinanceVoiceAgentApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinanceVoiceAgentApp.swift; sourceTree = "<group>"; };
 		ED239E0A1849B9300339C4AD /* BinanceVoiceWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = BinanceVoiceWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F91AA831B690B440237D5D29 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		FB07E4A014A64E176A3FA9D4 /* IslandIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandIntents.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -89,6 +95,7 @@
 			children = (
 				7991B117169F0DC54376EA99 /* BiometricService.swift */,
 				89B239C6D10588669C223711 /* CommandParser.swift */,
+				721BF72998FA0382E756EC0B /* DashScopeASR.swift */,
 				54CFA710B00D94ADCFD91008 /* IslandFlow.swift */,
 				1CA345900F9C7CE6FBE443AA /* NotificationService.swift */,
 				542DA4AF3328654572FE38A9 /* OrderService.swift */,
@@ -104,6 +111,7 @@
 				6A8EC1837783838C36527AAE /* Assets.xcassets */,
 				E7F3C11A8DE1A9E37A31CC8B /* BinanceVoiceAgentApp.swift */,
 				2A39E250077EB8EC347F35BD /* Info.plist */,
+				5F4D8818D7EC0C6398CD0861 /* Config */,
 				CA26B826B456006B4503AEBA /* Intents */,
 				D2301E70C0E7E1EFBE4F26EF /* Models */,
 				00824197850DABF451BD94A6 /* Services */,
@@ -130,6 +138,15 @@
 				D06D24B264A91B1CBD35F472 /* TradeActivityAttributes.swift */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		5F4D8818D7EC0C6398CD0861 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				AB00F2DD99C46976E0B38FB1 /* Secrets.example.swift.template */,
+				F91AA831B690B440237D5D29 /* Secrets.swift */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		64D8A250B72717BE3EB8460E /* Views */ = {
@@ -260,6 +277,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2CD46A7E3121772DE04BE387 /* Assets.xcassets in Resources */,
+				967796C461884A4155AA1E32 /* Secrets.example.swift.template in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -287,6 +305,7 @@
 				C361974F5CD6CC23D6E34967 /* BiometricService.swift in Sources */,
 				77F3044E9DACA4EE71FE0C99 /* CommandParser.swift in Sources */,
 				18B31FA28E1681632AB813B7 /* ConfirmView.swift in Sources */,
+				159AD37FBF052529535C3BDA /* DashScopeASR.swift in Sources */,
 				BB5377EBFCB00607824DBC2C /* IslandFlow.swift in Sources */,
 				FB17F09658C484819430AA75 /* IslandIntents.swift in Sources */,
 				AAD1136E2E474978F27BEA4A /* ListeningView.swift in Sources */,
@@ -294,6 +313,7 @@
 				DFFB514810C0558B55BE2811 /* OrderService.swift in Sources */,
 				0F7BF0BDCB7F82064EECCA15 /* ResultView.swift in Sources */,
 				03A5D532A2B3328CADBC2A3E /* RootView.swift in Sources */,
+				2F4AE6498A29692C6CE2F81B /* Secrets.swift in Sources */,
 				BC200926F8B0FE3E3AA9CDCE /* SpeechService.swift in Sources */,
 				3B96DB7618F48493F8302B2B /* Theme.swift in Sources */,
 				0A79A1B4F875248A100CF5C3 /* TradeActivityAttributes.swift in Sources */,
