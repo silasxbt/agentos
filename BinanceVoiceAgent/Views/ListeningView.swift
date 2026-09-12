@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ListeningView: View {
     @EnvironmentObject var state: AppState
-    @State private var phase = 0.0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,8 +19,9 @@ struct ListeningView: View {
                 Text("Qwen 语音转写中…").font(Theme.h2).padding(.top, 16)
                 Text("qwen-audio-3.0-asr-flash-filetrans").font(Theme.tiny).foregroundStyle(Theme.text3).padding(.top, 4)
             } else {
-                Waveform(level: state.speech.level, phase: phase)
-                    .frame(height: 100).padding(.horizontal, 32)
+                TimelineView(.animation(minimumInterval: 1.0 / 30)) { tl in
+                    Waveform(level: state.speech.level, phase: tl.date.timeIntervalSinceReferenceDate)
+                }.frame(height: 100).padding(.horizontal, 32)
                 HStack(spacing: 6) {
                     Circle().fill(Theme.red).frame(width: 6, height: 6)
                     Text(state.speech.isListening ? "正在聆听" : "准备中").font(Theme.caption).foregroundStyle(Theme.text3)
@@ -56,9 +56,6 @@ struct ListeningView: View {
             }
         }
         .padding(.bottom, 32)
-        .onAppear {
-            withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) { phase = .pi * 2 }
-        }
     }
 }
 
@@ -67,18 +64,26 @@ struct Waveform: View {
     var phase: Double
     private let bars = 32
 
+    /// 基础呼吸波 + 音量放大;phase 为时间戳,由 TimelineView 逐帧驱动
+    private func height(_ i: Int) -> CGFloat {
+        let x: Double = Double(i) / Double(bars)
+        let env: Double = sin(x * .pi)
+        let wave: Double = (sin(x * 7 + phase * 5) + 1) / 2
+        let wave2: Double = (sin(x * 13 - phase * 8) + 1) / 2
+        let boosted: Double = min(1, pow(Double(level), 0.6) * 1.3)
+        let base: Double = 0.08 + env * (0.18 + 0.12 * wave)
+        let voice: Double = env * boosted * (0.4 + 0.3 * wave2)
+        return max(4, CGFloat(100 * (base + voice)))
+    }
+
     var body: some View {
         HStack(alignment: .center, spacing: 4) {
             ForEach(0..<bars, id: \.self) { i in
-                let x = Double(i) / Double(bars)
-                let env = sin(x * .pi)
-                let wave = (sin(x * 6 + phase * 3) + 1) / 2
-                let amp = CGFloat(0.1 + env * wave * (0.25 + Double(level) * 0.75))
+                let env = sin(Double(i) / Double(bars) * .pi)
                 RoundedRectangle(cornerRadius: 2)
-                    .fill(Theme.brand.opacity(0.45 + Double(env) * 0.55))
-                    .frame(width: 4, height: max(4, 100 * amp))
+                    .fill(Theme.brand.opacity(0.45 + env * 0.55))
+                    .frame(width: 4, height: height(i))
             }
         }
-        .animation(.easeOut(duration: 0.08), value: level)
     }
 }
