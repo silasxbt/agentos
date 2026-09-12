@@ -128,9 +128,8 @@ struct ActionRow: View {
                 HStack(spacing: 8) {
                     if state.phase == .listening {
                         Image(systemName: "record.circle.fill").foregroundStyle(Theme.red).symbolEffect(.pulse)
-                        Text("正在录音").font(Theme.bodyM).foregroundStyle(Theme.text)
+                        Text("录音中").font(Theme.bodyM).foregroundStyle(Theme.text)
                         if let t = state.recordingStartedAt { Text(t, style: .timer).font(Theme.bodyM).monospacedDigit().foregroundStyle(Theme.red).frame(width: 44, alignment: .leading) }
-                        Text("说完自动停止").font(Theme.caption).foregroundStyle(Theme.text3)
                     } else {
                         ProgressView().tint(Theme.brand).controlSize(.small)
                         Text("Qwen 转写中…").font(Theme.body).foregroundStyle(Theme.text2)
@@ -138,7 +137,11 @@ struct ActionRow: View {
                     Spacer(minLength: 0)
                 }
                 Button(intent: CancelFromIslandIntent()) { islandLabel("取消", fg: Theme.text, bg: Theme.card2) }
-                    .buttonStyle(.plain).frame(width: 72)
+                    .buttonStyle(.plain).frame(width: 64)
+                if state.phase == .listening {
+                    Button(intent: FinishRecordingFromIslandIntent()) { islandLabel("完成", icon: "stop.fill", fg: Theme.onYellow, bg: Theme.yellow) }
+                        .buttonStyle(.plain).frame(width: 84)
+                }
             }
         case .pending:
             HStack(spacing: 8) {

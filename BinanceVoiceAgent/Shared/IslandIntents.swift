@@ -27,3 +27,17 @@ struct CancelFromIslandIntent: LiveActivityIntent {
         return .result()
     }
 }
+
+/// 灵动岛「完成」:手动结束录音,进入转写
+struct FinishRecordingFromIslandIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "结束录音"
+    static let openAppWhenRun = false
+    static let isDiscoverable = false
+
+    func perform() async throws -> some IntentResult {
+        #if !WIDGET
+        await IslandFlow.shared.finishRecording()
+        #endif
+        return .result()
+    }
+}

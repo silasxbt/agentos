@@ -120,6 +120,7 @@ struct DashScopeASR {
         req.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         for _ in 0..<60 {   // 最长约 60s
             let out = try await send(req, as: TaskResp.self).output
+            NSLog("[ASR] poll %@ -> %@", taskId, out.task_status)
             switch out.task_status {
             case "SUCCEEDED":
                 guard let s = out.results?.first?.transcription_url, let u = URL(string: s) else {
@@ -151,7 +152,10 @@ struct DashScopeASR {
     private func send<T: Decodable>(_ req: URLRequest, as: T.Type) async throws -> T {
         let (d, r) = try await URLSession.shared.data(for: req)
         let code = (r as? HTTPURLResponse)?.statusCode ?? 0
-        guard (200..<300).contains(code) else { throw ASRError.http(code, String(data: d, encoding: .utf8) ?? "") }
+        guard (200..<300).contains(code) else {
+            NSLog("[ASR] http %d %@ %@", code, req.url?.path ?? "", String(data: d, encoding: .utf8) ?? "")
+            throw ASRError.http(code, String(data: d, encoding: .utf8) ?? "")
+        }
         do { return try JSONDecoder().decode(T.self, from: d) }
         catch { throw ASRError.badResponse(String(data: d, encoding: .utf8)?.prefix(200).description ?? "\(error)") }
     }

@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ListeningView: View {
     @EnvironmentObject var state: AppState
+    /// SpeechService 是嵌套的 ObservableObject,必须单独观察,否则录音/转写状态变化不会刷新本视图
+    @ObservedObject private var speech = AppState.shared.speech
 
     var body: some View {
         VStack(spacing: 0) {
@@ -14,27 +16,27 @@ struct ListeningView: View {
             if state.stage == .parsing {
                 ProgressView().controlSize(.large).tint(Theme.brand)
                 Text("Agent 正在理解指令…").font(Theme.h2).padding(.top, 16)
-            } else if state.speech.isTranscribing {
+            } else if speech.isTranscribing {
                 ProgressView().controlSize(.large).tint(Theme.brand)
                 Text("Qwen 语音转写中…").font(Theme.h2).padding(.top, 16)
                 Text("qwen-audio-3.0-asr-flash-filetrans").font(Theme.tiny).foregroundStyle(Theme.text3).padding(.top, 4)
             } else {
                 TimelineView(.animation(minimumInterval: 1.0 / 30)) { tl in
-                    Waveform(level: state.speech.level, phase: tl.date.timeIntervalSinceReferenceDate)
+                    Waveform(level: speech.level, phase: tl.date.timeIntervalSinceReferenceDate)
                 }.frame(height: 100).padding(.horizontal, 32)
                 HStack(spacing: 6) {
                     Circle().fill(Theme.red).frame(width: 6, height: 6)
-                    Text(state.speech.isListening ? "正在聆听" : "准备中").font(Theme.caption).foregroundStyle(Theme.text3)
+                    Text(speech.isListening ? "正在聆听" : "准备中").font(Theme.caption).foregroundStyle(Theme.text3)
                 }.padding(.top, 16)
             }
 
-            Text(state.speech.transcript.isEmpty ? "说出:方向 · 币种 · 杠杆 · 全仓/逐仓 · 金额 · 止盈止损" : state.speech.transcript)
-                .font(state.speech.transcript.isEmpty ? Theme.body : Theme.f(20, .medium))
-                .foregroundStyle(state.speech.transcript.isEmpty ? Theme.text3 : Theme.text)
+            Text(speech.transcript.isEmpty ? "说出:方向 · 币种 · 杠杆 · 全仓/逐仓 · 金额 · 止盈止损" : speech.transcript)
+                .font(speech.transcript.isEmpty ? Theme.body : Theme.f(20, .medium))
+                .foregroundStyle(speech.transcript.isEmpty ? Theme.text3 : Theme.text)
                 .multilineTextAlignment(.center).padding(.horizontal, 32).padding(.top, 24)
                 .frame(minHeight: 90)
 
-            if let err = state.speech.errorMessage {
+            if let err = speech.errorMessage {
                 Text(err).font(Theme.caption).foregroundStyle(Theme.red).padding(.horizontal).multilineTextAlignment(.center)
                 HStack(spacing: 12) {
                     Button("重试") { state.startListening() }.buttonStyle(SecondaryButton(height: 40))

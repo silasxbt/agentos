@@ -136,6 +136,12 @@ final class IslandFlow {
         await endCurrent(immediately: false)
     }
 
+    /// 灵动岛「完成」:手动结束录音,立即进入转写
+    func finishRecording() async {
+        guard recorder.isListening else { return }
+        recorder.finish()
+    }
+
     /// 灵动岛「取消」:录音中则停止录音;待确认则撤单
     func cancelPending() async {
         if recorder.isListening || recorder.isTranscribing {

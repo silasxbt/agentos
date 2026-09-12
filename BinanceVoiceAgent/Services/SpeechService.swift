@@ -137,10 +137,12 @@ final class SpeechService: NSObject, ObservableObject {
             defer { isTranscribing = false }
             do {
                 let text = try await DashScopeASR().transcribe(fileURL: url)
-                guard !Task.isCancelled, isTranscribing else { return }
+                NSLog("[ASR] text=%@", text)
+                guard !Task.isCancelled, isTranscribing else { NSLog("[ASR] dropped (cancelled)"); return }
                 transcript = text
                 onFinal?(text)
             } catch {
+                NSLog("[ASR] transcribe failed: %@", error.localizedDescription)
                 errorMessage = error.localizedDescription
             }
         }
