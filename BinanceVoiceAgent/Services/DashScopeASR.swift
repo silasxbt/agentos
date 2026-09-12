@@ -22,8 +22,8 @@ struct DashScopeASR {
     var apiKey: String
     /// 可通过设置页覆盖 Key;默认读取 Secrets.swift
     init(apiKey: String? = nil) {
-        let override = UserDefaults.standard.string(forKey: "dashScopeAPIKey")?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        self.apiKey = apiKey ?? (override.isEmpty ? Secrets.dashScopeAPIKey : override)
+        // App 内置模型配置:Key 固定来自 Config/Secrets.swift,不向用户暴露自定义入口
+        self.apiKey = apiKey ?? Secrets.dashScopeAPIKey
     }
 
     /// 转写本地音频文件,返回整段文本

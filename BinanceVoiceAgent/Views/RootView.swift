@@ -244,23 +244,15 @@ typealias PrimaryButton = BinanceButton
 struct SettingsView: View {
     @EnvironmentObject var state: AppState
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("dashScopeAPIKey") private var apiKeyOverride = ""
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 12) {
-                    group("语音转写模型") {
-                        VStack(alignment: .leading, spacing: 10) {
+                    group("内置语音模型") {
+                        VStack(spacing: 0) {
                             kv("提供方", "阿里云百炼 DashScope")
-                            kv("模型", DashScopeASR.model, last: true)
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("API Key 覆盖(留空则使用 Config/Secrets.swift)").font(Theme.caption).foregroundStyle(Theme.text3)
-                                SecureField("sk-…", text: $apiKeyOverride)
-                                    .font(Theme.body).foregroundStyle(Theme.text)
-                                    .textInputAutocapitalization(.never).autocorrectionDisabled()
-                                    .padding(.horizontal, 12).frame(height: 40)
-                                    .background(Theme.card2, in: RoundedRectangle(cornerRadius: Theme.r4))
-                            }.padding(.horizontal, 16).padding(.bottom, 16)
+                            kv("模型", DashScopeASR.model)
+                            kv("配置", "App 内置,无需用户设置", last: true)
                         }
                     }
                     group("安全") {
@@ -274,14 +266,12 @@ struct SettingsView: View {
                             Toggle("", isOn: $state.requireBiometrics).labelsHidden().tint(Theme.green)
                         }.padding(16)
                     }
-                    group("三种触发方式") {
+                    group("两种触发方式(均不打开 App)") {
                         VStack(alignment: .leading, spacing: 14) {
-                            path("内置语音", "Apple 内置 · 打开 App", Theme.green,
-                                 "设置 → 操作按钮 → 快捷指令 → 「Binance Voice → 内置语音」。打开 App 录音,App 内用 Qwen 转写并进入确认页。")
-                            path("全局语音", "Apple 听写 · 不开 App", Theme.brand,
-                                 "快捷指令:「听写文本」(中文)→「Binance Voice → 全局语音下单」,听写结果接到「交易指令」。任意界面按侧键 → 灵动岛确认。")
-                            path("增强语音", "Qwen 云端转写 · 不开 App", Theme.yellow,
-                                 "快捷指令:「录制音频」(停顿后停止)→「Binance Voice → 增强语音下单」,录音接到「录音文件」。后台上传 DashScope 转写 → 灵动岛确认。")
+                            path("全局语音", "Apple 听写 · 灵动岛确认", Theme.brand,
+                                 "快捷指令:「听写文本」(中文)→「Binance Voice → 全局语音下单」,听写结果接到「交易指令」。任意界面按侧键 → 灵动岛 取消 / 编辑 / 确定。")
+                            path("增强语音", "内置 Qwen · 一键录音", Theme.yellow,
+                                 "设置 → 操作按钮 → 快捷指令 → 「Binance Voice → 增强语音」。按下直接录音(App 保持后台),说完自动停止,Qwen 转写后灵动岛显示结果:取消 / 编辑 / 确定。确定 → 立刻通知下单成功或失败;编辑 → 打开 App,字段已回填。")
                         }.padding(16)
                     }
                     group("关于") {

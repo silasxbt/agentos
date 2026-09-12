@@ -2,50 +2,43 @@
 
 SwiftUI 原生 iOS App:**Action Button → 语音听写 → Agent 结构化解析 → 灵动岛/锁屏卡片确认 → 下单 → 原生通知**。全程不需要打开 App。
 
-| 灵动岛卡片(待确认) | 灵动岛卡片(已成交 + 通知) | 「修改」跳回 App | App 内确认页 |
+| 灵动岛卡片(待确认) | 灵动岛卡片(已成交 + 通知) | 「编辑」跳回 App | App 内确认页 |
 |---|---|---|---|
 | ![](docs/island_pending.png) | ![](docs/island_filled.png) | ![](docs/island_edit.png) | ![](docs/confirm.png) |
 
-## 三条语音路径
+## 两条语音路径(均不打开 App)
 
-| 路径 | 语音识别 | 是否打开 App | Intent | 快捷指令搭配 |
+| 路径 | 语音识别 | 触发 | Intent | 结果 |
 |---|---|---|---|---|
-| **全局语音** | Apple 内置听写 | 否,灵动岛确认 | `VoiceTradeIntent` | 「听写文本」→ 全局语音下单 |
-| **内置语音** | App 内录音 → Qwen ASR | 是,进确认页 | `StartVoiceTradeIntent` | 直接绑定「内置语音」 |
-| **增强语音** | 「录制音频」→ 后台 Qwen ASR | 否,灵动岛确认 | `EnhancedVoiceTradeIntent` | 「录制音频」→ 增强语音下单 |
+| **全局语音** | Apple 内置听写 | 快捷指令「听写文本」→ 全局语音下单 | `VoiceTradeIntent` | 灵动岛卡片:取消 / 编辑 / 确定 |
+| **增强语音** | App 内置 Qwen ASR(Key 预置) | 直接绑定「增强语音」,一键录音 | `EnhancedVoiceTradeIntent` | 灵动岛卡片:取消 / 编辑 / 确定 |
 
-### 全局语音(Apple 听写,不跳 App)
-1. 在任何 App(Coinglass / TradingView…)按下 **Action Button** → 系统「听写文本」开始录音。
-2. 听写结果传给 `VoiceTradeIntent`(`openAppWhenRun = false`),后台解析并弹出 **Live Activity**(灵动岛 + 锁屏卡片)。
-3. 卡片显示 **币种 / 方向 / 杠杆 / 全仓逐仓 / 保证金 / 止盈止损 / 置信度**,底部三个按钮:
-   - **取消**:`CancelFromIslandIntent`,原地结束。
-   - **修改**:深链 `binancevoice://edit`,跳进 App,整份配置带入 `ConfirmView` 快捷编辑。
-   - **下单**:`SubmitFromIslandIntent`(`LiveActivityIntent`,后台执行,不弹窗)→ 卡片变为「已成交 @ 价格 #订单号」→ 原生通知。
-4. 开启 Face ID 开关时,「下单」改为深链 `binancevoice://submit`,进 App 先过 Face ID 再提交。
+### 灵动岛卡片(两条路径共用)
+卡片显示 **币种 / 方向 / 杠杆 / 全仓逐仓 / 保证金 / 止盈止损 / 置信度**,底部三个按钮:
+- **取消**:`CancelFromIslandIntent`,原地结束(录音/转写阶段也可取消)。
+- **编辑**:深链 `binancevoice://edit`,跳进 App,刚解析的全部字段已回填到 `ConfirmView` 供快速修改。
+- **确定**:`SubmitFromIslandIntent`(`LiveActivityIntent`,后台执行,不弹窗)→ App 立刻推送通知:**「合约订单已成交」** 或 **「下单失败:可用保证金不足」**(模拟可用保证金 1,000 USDT,超过即失败)等。
+- 开启 Face ID 开关时,「确定」改为深链 `binancevoice://submit`,进 App 先过 Face ID 再提交。
 
-### 内置语音(App 内,Qwen 转写)
-Action Button 绑定「内置语音」(`StartVoiceTradeIntent`)→ 打开 App 录音 → 上传 DashScope 转写 → `ConfirmView` 确认/编辑 → (可选 Face ID)→ 成交页 + 通知。
+### 全局语音(Apple 听写)
+在任何 App(Coinglass / TradingView…)按下 **Action Button** → 系统「听写文本」录音 → 文本传给 `VoiceTradeIntent`(`openAppWhenRun = false`)→ 后台解析并弹出 Live Activity。
 
-### 增强语音(Qwen 转写,不跳 App)
-「录制音频」动作在系统浮层里录音(不进 App),录音文件传给 `EnhancedVoiceTradeIntent`,Intent 在后台上传 DashScope 转写(实测 2~4 秒,支持 m4a/wav),再解析并弹出灵动岛卡片;之后与全局语音一致。
+### 增强语音(内置 Qwen,一键)
+`EnhancedVoiceTradeIntent` 在 **App 进程内** 执行(`openAppWhenRun = false`,App 不会切到前台;`UIBackgroundModes: audio`):
+1. 灵动岛立刻显示「正在聆听」,`SpeechService` 用 `AVAudioEngine` 录 16kHz WAV,说完静音 1.6s 自动停止(最长 15s)。
+2. 卡片变为「Qwen 转写中」,`DashScopeASR` 用内置 Key 上传转写(2~4 秒)。
+3. `CommandParser` 解析后,卡片更新为待确认订单:取消 / 编辑 / 确定。
+兼容:若快捷指令里把「录制音频」的输出接到「录音文件」参数,则跳过录音直接转写该文件。
 
 ## 真机设置
 
-**内置语音**:设置 → 操作按钮 → 快捷指令 → 选择「Binance Voice → 内置语音」。按下即打开 App 开始录音。
+**增强语音(推荐)**:设置 → 操作按钮 → 快捷指令 → 选择「Binance Voice → 增强语音」。按下即在灵动岛开始录音,不跳 App。首次使用需先打开一次 App 授权麦克风与通知。
 
-**全局语音**(iOS 不允许后台 App 自行打开麦克风,所以用系统听写取音):
+**全局语音**(用系统听写取音):
 1. 打开「快捷指令」→ 新建。
 2. 添加动作 **听写文本**(语言:中文,停止聆听:暂停后)。
 3. 添加动作 **Binance Voice → 全局语音下单(Apple 听写)**,把「听写文本」的输出拖到「交易指令」参数。
 4. 命名 → 设置 → 操作按钮 → 快捷指令 → 选择它。
-
-**增强语音**:
-1. 打开「快捷指令」→ 新建。
-2. 添加动作 **录制音频**(开始录音:立即;停止录音:暂停后 或 点按时)。
-3. 添加动作 **Binance Voice → 增强语音下单(Qwen 转写)**,把「录制音频」的输出拖到「录音文件」参数。
-4. 命名 → 设置 → 操作按钮 → 快捷指令 → 选择它。
-
-按下 Action Button 后会短暂出现系统听写/录音浮层,不会跳 App;说完即出现灵动岛卡片。
 
 ## Face ID 开关
 首页右上角齿轮 → 「Face ID 二次确认」。默认关闭:手机处于解锁状态即视为已授权,「下单」在卡片上直接后台成交。开启后每次下单都需 Face ID。

@@ -17,25 +17,37 @@ struct TradeLiveActivity: Widget {
             let s = ctx.state
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    HStack(spacing: 6) {
-                        SideBadge(side: s.order.side)
-                        Text(s.order.baseAsset).font(Theme.h2).foregroundStyle(Theme.text)
-                    }.padding(.leading, 4)
+                    if s.isPreOrder {
+                        HStack(spacing: 6) { Image(systemName: "hexagon.fill").foregroundStyle(Theme.brand); Text("Binance Voice").font(Theme.captionM).foregroundStyle(Theme.text2) }.padding(.leading, 4)
+                    } else {
+                        HStack(spacing: 6) {
+                            SideBadge(side: s.order.side)
+                            Text(s.order.baseAsset).font(Theme.h2).foregroundStyle(Theme.text)
+                        }.padding(.leading, 4)
+                    }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    HStack(spacing: 4) {
-                        Chip(text: s.order.marginMode == .cross ? "全仓" : "逐仓", fg: Theme.brand, bg: Theme.yellowBg)
-                        Chip(text: "\(s.order.leverage)x", fg: Theme.brand, bg: Theme.yellowBg)
-                    }.padding(.trailing, 4)
+                    if s.isPreOrder {
+                        Chip(text: "Qwen ASR", fg: Theme.brand, bg: Theme.yellowBg).padding(.trailing, 4)
+                    } else {
+                        HStack(spacing: 4) {
+                            Chip(text: s.order.marginMode == .cross ? "全仓" : "逐仓", fg: Theme.brand, bg: Theme.yellowBg)
+                            Chip(text: "\(s.order.leverage)x", fg: Theme.brand, bg: Theme.yellowBg)
+                        }.padding(.trailing, 4)
+                    }
                 }
                 DynamicIslandExpandedRegion(.center) {
-                    ConfigLine(state: s)
+                    if !s.isPreOrder { ConfigLine(state: s) }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     ActionRow(state: s).padding(.top, 4)
                 }
             } compactLeading: {
-                HStack(spacing: 4) { SideBadge(side: s.order.side, small: true); Text(s.order.baseAsset).font(Theme.captionM).foregroundStyle(Theme.text) }
+                if s.isPreOrder {
+                    Image(systemName: s.phase == .listening ? "mic.fill" : "waveform").foregroundStyle(Theme.brand)
+                } else {
+                    HStack(spacing: 4) { SideBadge(side: s.order.side, small: true); Text(s.order.baseAsset).font(Theme.captionM).foregroundStyle(Theme.text) }
+                }
             } compactTrailing: {
                 PhaseTag(state: s)
             } minimal: {
@@ -63,6 +75,8 @@ struct PhaseTag: View {
     let state: TradeActivityAttributes.ContentState
     var body: some View {
         switch state.phase {
+        case .listening: Text("聆听中").font(Theme.captionM).foregroundStyle(Theme.brand)
+        case .transcribing: ProgressView().tint(Theme.brand).controlSize(.mini)
         case .pending: Text("\(state.order.leverage)x").font(Theme.captionM).foregroundStyle(Theme.brand)
         case .submitting: ProgressView().tint(Theme.brand).controlSize(.mini)
         case .filled: Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.green)
@@ -90,7 +104,7 @@ struct ConfigLine: View {
                 Spacer(minLength: 0)
             }.lineLimit(1).minimumScaleFactor(0.7)
             if !o.missingFields.isEmpty {
-                Text("缺少:\(o.missingFields.joined(separator: "、")),请点修改").font(Theme.tiny).foregroundStyle(Theme.red)
+                Text("缺少:\(o.missingFields.joined(separator: "、")),请点编辑").font(Theme.tiny).foregroundStyle(Theme.red)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -101,14 +115,29 @@ struct ActionRow: View {
     let state: TradeActivityAttributes.ContentState
     var body: some View {
         switch state.phase {
+        case .listening, .transcribing:
+            HStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    if state.phase == .listening {
+                        Image(systemName: "mic.fill").foregroundStyle(Theme.red).symbolEffect(.pulse)
+                        Text("正在聆听,说完自动停止…").font(Theme.body).foregroundStyle(Theme.text)
+                    } else {
+                        ProgressView().tint(Theme.brand).controlSize(.small)
+                        Text("Qwen 转写中…").font(Theme.body).foregroundStyle(Theme.text2)
+                    }
+                    Spacer(minLength: 0)
+                }
+                Button(intent: CancelFromIslandIntent()) { islandLabel("取消", fg: Theme.text, bg: Theme.card2) }
+                    .buttonStyle(.plain).frame(width: 72)
+            }
         case .pending:
             HStack(spacing: 8) {
                 Button(intent: CancelFromIslandIntent()) { islandLabel("取消", fg: Theme.text, bg: Theme.card2) }
                     .buttonStyle(.plain)
-                Link(destination: DeepLink.edit) { islandLabel("修改", fg: Theme.text, bg: Theme.card2) }
+                Link(destination: DeepLink.edit) { islandLabel("编辑", fg: Theme.text, bg: Theme.card2) }
                 if state.order.missingFields.isEmpty {
                     let submitFill = state.order.side == .long ? Theme.green : Theme.red
-                    let submitText = state.order.side == .long ? "买入/做多" : "卖出/做空"
+                    let submitText = state.order.side == .long ? "确定 · 做多" : "确定 · 做空"
                     if state.requireBiometrics {
                         Link(destination: DeepLink.submit) { islandLabel(submitText, icon: "faceid", fg: .white, bg: submitFill) }
                     } else {
@@ -152,18 +181,24 @@ struct LockScreenCard: View {
                 Image(systemName: "hexagon.fill").foregroundStyle(Theme.brand)
                 Text("Binance Voice").font(Theme.captionM).foregroundStyle(Theme.text2)
                 Spacer()
-                Chip(text: "置信度 \(Int(state.confidence * 100))%", fg: state.confidence > 0.7 ? Theme.green : Theme.brand,
-                     bg: state.confidence > 0.7 ? Theme.greenBg : Theme.yellowBg)
+                if state.isPreOrder {
+                    Chip(text: "Qwen ASR", fg: Theme.brand, bg: Theme.yellowBg)
+                } else {
+                    Chip(text: "置信度 \(Int(state.confidence * 100))%", fg: state.confidence > 0.7 ? Theme.green : Theme.brand,
+                         bg: state.confidence > 0.7 ? Theme.greenBg : Theme.yellowBg)
+                }
             }
-            HStack(spacing: 8) {
-                SideBadge(side: state.order.side)
-                Text("\(state.order.baseAsset)USDT").font(Theme.f(18, .semibold)).foregroundStyle(Theme.text)
-                Chip(text: "永续", fg: Theme.text3)
-                Chip(text: state.order.marginMode == .cross ? "全仓" : "逐仓", fg: Theme.brand, bg: Theme.yellowBg)
-                Chip(text: "\(state.order.leverage)x", fg: Theme.brand, bg: Theme.yellowBg)
-                Spacer()
+            if !state.isPreOrder {
+                HStack(spacing: 8) {
+                    SideBadge(side: state.order.side)
+                    Text("\(state.order.baseAsset)USDT").font(Theme.f(18, .semibold)).foregroundStyle(Theme.text)
+                    Chip(text: "永续", fg: Theme.text3)
+                    Chip(text: state.order.marginMode == .cross ? "全仓" : "逐仓", fg: Theme.brand, bg: Theme.yellowBg)
+                    Chip(text: "\(state.order.leverage)x", fg: Theme.brand, bg: Theme.yellowBg)
+                    Spacer()
+                }
+                ConfigLine(state: state)
             }
-            ConfigLine(state: state)
             ActionRow(state: state).padding(.top, 2)
         }
         .padding(14).foregroundStyle(Theme.text)

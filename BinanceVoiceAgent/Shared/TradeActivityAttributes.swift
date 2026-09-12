@@ -2,7 +2,7 @@ import ActivityKit
 import Foundation
 
 struct TradeActivityAttributes: ActivityAttributes {
-    enum Phase: String, Codable, Hashable { case pending, submitting, filled, failed, cancelled }
+    enum Phase: String, Codable, Hashable { case listening, transcribing, pending, submitting, filled, failed, cancelled }
 
     struct ContentState: Codable, Hashable {
         var order: TradeOrder
@@ -12,6 +12,9 @@ struct TradeActivityAttributes: ActivityAttributes {
         var entryPrice: Double? = nil
         var orderId: String? = nil
         var message: String? = nil
+
+        /// 录音 / 转写阶段,还没有订单内容
+        var isPreOrder: Bool { phase == .listening || phase == .transcribing }
     }
 
     var startedAt: Date

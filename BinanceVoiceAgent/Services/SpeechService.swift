@@ -18,6 +18,8 @@ final class SpeechService: NSObject, ObservableObject {
     private var heardSpeech = false
     private var maxTimer: Timer?
     var onFinal: ((String) -> Void)?
+    /// 设置后,录音结束只回传文件、不在本类内转写(灵动岛链路使用)
+    private var onRecorded: ((URL?) -> Void)?
 
     private static let sampleRate: Double = 16_000
     private static let silenceThreshold: Float = 0.06   // rms(放大后)低于此视为静音
@@ -38,7 +40,9 @@ final class SpeechService: NSObject, ObservableObject {
         // 演示:-demoAudio /path.wav 直接走云端转写,不录音
         let args = ProcessInfo.processInfo.arguments
         if let i = args.firstIndex(of: "-demoAudio"), i + 1 < args.count {
-            transcribe(URL(fileURLWithPath: args[i + 1])); return
+            let demo = URL(fileURLWithPath: args[i + 1])
+            if let cb = onRecorded { onRecorded = nil; cb(demo) } else { transcribe(demo) }
+            return
         }
         do {
             let session = AVAudioSession.sharedInstance()
@@ -105,8 +109,26 @@ final class SpeechService: NSObject, ObservableObject {
         guard isListening else { return }
         stopEngine()
         file = nil
-        guard let url = fileURL else { return }
+        guard let url = fileURL else { onRecorded?(nil); onRecorded = nil; return }
+        if let cb = onRecorded { onRecorded = nil; cb(url); return }
         transcribe(url)
+    }
+
+    /// 录一段(说完自动停,或达到上限),返回 16kHz WAV 文件;不做转写。
+    func recordOnce(maxSeconds: TimeInterval? = nil) async throws -> URL {
+        if isListening { cancel() }
+        return try await withCheckedThrowingContinuation { cont in
+            onRecorded = { url in
+                if let url { cont.resume(returning: url) }
+                else { cont.resume(throwing: NSError(domain: "Speech", code: 1, userInfo: [NSLocalizedDescriptionKey: self.errorMessage ?? "录音被取消"])) }
+            }
+            start()
+            if let msg = errorMessage { onRecorded = nil; cont.resume(throwing: NSError(domain: "Speech", code: 2, userInfo: [NSLocalizedDescriptionKey: msg])); return }
+            if let maxSeconds {
+                maxTimer?.invalidate()
+                maxTimer = Timer.scheduledTimer(withTimeInterval: maxSeconds, repeats: false) { [weak self] _ in Task { @MainActor in self?.finish() } }
+            }
+        }
     }
 
     private func transcribe(_ url: URL) {
@@ -124,7 +146,10 @@ final class SpeechService: NSObject, ObservableObject {
         }
     }
 
-    func cancel() { stopEngine(); file = nil; isTranscribing = false; transcript = "" }
+    func cancel() {
+        stopEngine(); file = nil; isTranscribing = false; transcript = ""
+        if let cb = onRecorded { onRecorded = nil; cb(nil) }
+    }
 
     private func stopEngine() {
         silenceTimer?.invalidate(); maxTimer?.invalidate()
