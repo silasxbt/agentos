@@ -12,6 +12,9 @@ struct TradeActivityAttributes: ActivityAttributes {
         var entryPrice: Double? = nil
         var orderId: String? = nil
         var message: String? = nil
+        /// 录音阶段:最近 N 帧音量(0~1),驱动灵动岛波形
+        var levels: [Float] = []
+        var recordingStartedAt: Date? = nil
 
         /// 录音 / 转写阶段,还没有订单内容
         var isPreOrder: Bool { phase == .listening || phase == .transcribing }

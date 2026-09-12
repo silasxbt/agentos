@@ -37,14 +37,20 @@ struct TradeLiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.center) {
-                    if !s.isPreOrder { ConfigLine(state: s) }
+                    if s.phase == .listening { WaveformView(levels: s.levels, color: Theme.brand).frame(height: 34) }
+                    else if !s.isPreOrder { ConfigLine(state: s) }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     ActionRow(state: s).padding(.top, 4)
                 }
             } compactLeading: {
-                if s.isPreOrder {
-                    Image(systemName: s.phase == .listening ? "mic.fill" : "waveform").foregroundStyle(Theme.brand)
+                if s.phase == .listening {
+                    HStack(spacing: 3) {
+                        Circle().fill(Theme.red).frame(width: 6, height: 6)
+                        WaveformView(levels: Array(s.levels.suffix(9)), color: Theme.brand, barWidth: 2, spacing: 1.5).frame(width: 30, height: 14)
+                    }
+                } else if s.isPreOrder {
+                    Image(systemName: "waveform").foregroundStyle(Theme.brand)
                 } else {
                     HStack(spacing: 4) { SideBadge(side: s.order.side, small: true); Text(s.order.baseAsset).font(Theme.captionM).foregroundStyle(Theme.text) }
                 }
@@ -75,7 +81,9 @@ struct PhaseTag: View {
     let state: TradeActivityAttributes.ContentState
     var body: some View {
         switch state.phase {
-        case .listening: Text("聆听中").font(Theme.captionM).foregroundStyle(Theme.brand)
+        case .listening:
+            if let t = state.recordingStartedAt { Text(t, style: .timer).font(Theme.captionM).monospacedDigit().foregroundStyle(Theme.red).frame(width: 40) }
+            else { Text("REC").font(Theme.captionM).foregroundStyle(Theme.red) }
         case .transcribing: ProgressView().tint(Theme.brand).controlSize(.mini)
         case .pending: Text("\(state.order.leverage)x").font(Theme.captionM).foregroundStyle(Theme.brand)
         case .submitting: ProgressView().tint(Theme.brand).controlSize(.mini)
@@ -119,8 +127,10 @@ struct ActionRow: View {
             HStack(spacing: 8) {
                 HStack(spacing: 8) {
                     if state.phase == .listening {
-                        Image(systemName: "mic.fill").foregroundStyle(Theme.red).symbolEffect(.pulse)
-                        Text("正在聆听,说完自动停止…").font(Theme.body).foregroundStyle(Theme.text)
+                        Image(systemName: "record.circle.fill").foregroundStyle(Theme.red).symbolEffect(.pulse)
+                        Text("正在录音").font(Theme.bodyM).foregroundStyle(Theme.text)
+                        if let t = state.recordingStartedAt { Text(t, style: .timer).font(Theme.bodyM).monospacedDigit().foregroundStyle(Theme.red).frame(width: 44, alignment: .leading) }
+                        Text("说完自动停止").font(Theme.caption).foregroundStyle(Theme.text3)
                     } else {
                         ProgressView().tint(Theme.brand).controlSize(.small)
                         Text("Qwen 转写中…").font(Theme.body).foregroundStyle(Theme.text2)
@@ -188,6 +198,9 @@ struct LockScreenCard: View {
                          bg: state.confidence > 0.7 ? Theme.greenBg : Theme.yellowBg)
                 }
             }
+            if state.phase == .listening {
+                WaveformView(levels: state.levels, color: Theme.brand).frame(height: 44)
+            }
             if !state.isPreOrder {
                 HStack(spacing: 8) {
                     SideBadge(side: state.order.side)
@@ -202,5 +215,29 @@ struct LockScreenCard: View {
             ActionRow(state: state).padding(.top, 2)
         }
         .padding(14).foregroundStyle(Theme.text)
+    }
+}
+
+/// 录音音量柱状波形(0~1),中心对称,最近一帧在最右侧
+struct WaveformView: View {
+    let levels: [Float]
+    var color: Color = .yellow
+    var barWidth: CGFloat = 3
+    var spacing: CGFloat = 2.5
+    var body: some View {
+        GeometryReader { geo in
+            let n = max(levels.count, 1)
+            let w = min(barWidth, (geo.size.width - spacing * CGFloat(n - 1)) / CGFloat(n))
+            HStack(alignment: .center, spacing: spacing) {
+                ForEach(Array(levels.enumerated()), id: \.offset) { i, l in
+                    let boosted = min(1, pow(CGFloat(l), 0.6) * 1.15)
+                    let h = max(3, geo.size.height * boosted)
+                    Capsule().fill(color.opacity(0.35 + 0.65 * Double(i + 1) / Double(n)))
+                        .frame(width: w, height: h)
+                }
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+            .animation(.easeOut(duration: 0.2), value: levels)
+        }
     }
 }

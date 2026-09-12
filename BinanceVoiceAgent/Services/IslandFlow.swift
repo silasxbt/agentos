@@ -1,6 +1,7 @@
 import Foundation
 import ActivityKit
 import SwiftUI
+import Combine
 
 /// 灵动岛链路:快捷指令(听写 / 增强语音)→ 本类 → Live Activity → 取消 / 编辑 / 确定
 @MainActor
@@ -10,6 +11,11 @@ final class IslandFlow {
     private var activity: Activity<TradeActivityAttributes>?
     /// 增强语音:App 进程内直接录音(不切前台)
     private let recorder = SpeechService()
+    private var levelSub: AnyCancellable?
+    private var levelRing: [Float] = []
+    private var levelDirty = false
+    private var levelPump: Timer?
+    static let waveBars = 28
 
     var requireBiometrics: Bool { UserDefaults.standard.bool(forKey: "requireBiometrics") }
 
@@ -39,13 +45,17 @@ final class IslandFlow {
         guard await recorder.requestPermissions() else { throw FlowError.micDenied }
         pendingDraft = nil
         await endCurrent(immediately: true)
-        show(phase: .listening, order: Self.placeholder)
+        levelRing = Array(repeating: 0, count: Self.waveBars)
+        show(phase: .listening, order: Self.placeholder, levels: levelRing, recordingStartedAt: Date())
+        startLevelStream()
         let url: URL
         do { url = try await recorder.recordOnce(maxSeconds: 15) }
         catch {
+            stopLevelStream()
             await endCurrent(immediately: true)
             throw activityCancelled ? FlowError.cancelled : error
         }
+        stopLevelStream()
         defer { try? FileManager.default.removeItem(at: url) }
         await update(phase: .transcribing, order: Self.placeholder)
         let transcript: String
@@ -61,6 +71,27 @@ final class IslandFlow {
 
     private var activityCancelled = false
 
+    /// 录音音量 → 每 0.25s 推一次到 Live Activity(波形动画)
+    private func startLevelStream() {
+        levelSub = recorder.$level.sink { [weak self] l in
+            guard let self else { return }
+            levelRing.removeFirst(); levelRing.append(l); levelDirty = true
+        }
+        levelPump = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.levelDirty, let a = self.current, a.content.state.phase == .listening else { return }
+                self.levelDirty = false
+                var st = a.content.state; st.levels = self.levelRing
+                await a.update(.init(state: st, staleDate: nil))
+            }
+        }
+    }
+
+    private func stopLevelStream() {
+        levelSub?.cancel(); levelSub = nil
+        levelPump?.invalidate(); levelPump = nil
+    }
+
     /// 解析文本并在灵动岛展示待确认订单(全局语音入口 / 增强语音转写后)
     @discardableResult
     func start(transcript: String) async -> TradeOrder {
@@ -75,11 +106,13 @@ final class IslandFlow {
         return r.order
     }
 
-    private func show(phase: TradeActivityAttributes.Phase, order: TradeOrder, confidence: Double = 1) {
+    private func show(phase: TradeActivityAttributes.Phase, order: TradeOrder, confidence: Double = 1,
+                      levels: [Float] = [], recordingStartedAt: Date? = nil) {
         activityCancelled = false
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { NSLog("[Island] activities disabled"); return }
         let state = TradeActivityAttributes.ContentState(order: order, phase: phase,
-                                                         requireBiometrics: requireBiometrics, confidence: confidence)
+                                                         requireBiometrics: requireBiometrics, confidence: confidence,
+                                                         levels: levels, recordingStartedAt: recordingStartedAt)
         do {
             activity = try Activity.request(attributes: TradeActivityAttributes(startedAt: Date()),
                                             content: .init(state: state, staleDate: Date().addingTimeInterval(600)))
@@ -107,6 +140,7 @@ final class IslandFlow {
     func cancelPending() async {
         if recorder.isListening || recorder.isTranscribing {
             activityCancelled = true
+            stopLevelStream()
             recorder.cancel()
         }
         if let order = pendingDraft { await update(phase: .cancelled, order: order) }
@@ -132,6 +166,7 @@ final class IslandFlow {
         s.phase = phase; s.order = order; s.entryPrice = entry; s.orderId = orderId; s.message = message
         if let confidence { s.confidence = confidence }
         s.requireBiometrics = requireBiometrics
+        if phase != .listening { s.levels = []; s.recordingStartedAt = nil }
         await activity.update(.init(state: s, staleDate: nil))
     }
 
