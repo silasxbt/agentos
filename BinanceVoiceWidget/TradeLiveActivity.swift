@@ -44,6 +44,8 @@ struct TradeLiveActivity: Widget {
                         if s.phase == .listening {
                             WaveformView(levels: s.levels, color: Theme.brand)
                                 .frame(maxWidth: .infinity).frame(height: 40).padding(.horizontal, 4)
+                        } else if s.phase == .transcribing {
+                            TranscribingLoader().frame(maxWidth: .infinity).frame(height: 40)
                         }
                         ActionRow(state: s)
                     }.padding(.top, 4)
@@ -135,15 +137,14 @@ struct ActionRow: View {
                         Text("录音中").font(Theme.bodyM).foregroundStyle(Theme.text)
                         if let t = state.recordingStartedAt { Text(t, style: .timer).font(Theme.bodyM).monospacedDigit().foregroundStyle(Theme.red).frame(width: 44, alignment: .leading) }
                     } else {
-                        ProgressView().tint(Theme.brand).controlSize(.small)
-                        Text("Qwen 转写中…").font(Theme.body).foregroundStyle(Theme.text2)
+                        Text("Qwen 识别中…").font(Theme.body).foregroundStyle(Theme.text2)
                     }
                     Spacer(minLength: 0)
                 }
                 Button(intent: CancelFromIslandIntent()) { islandLabel("取消", fg: Theme.text, bg: Theme.card2) }
                     .buttonStyle(.plain).frame(width: 64)
                 if state.phase == .listening {
-                    Button(intent: FinishRecordingFromIslandIntent()) { islandLabel("完成", icon: "stop.fill", fg: Theme.onYellow, bg: Theme.yellow) }
+                    Button(intent: FinishRecordingFromIslandIntent()) { islandLabel("停止", icon: "stop.fill", fg: Theme.onYellow, bg: Theme.yellow) }
                         .buttonStyle(.plain).frame(width: 84)
                 }
             }
@@ -153,7 +154,7 @@ struct ActionRow: View {
                     .buttonStyle(.plain)
                 Link(destination: DeepLink.edit) { islandLabel("编辑", fg: Theme.text, bg: Theme.card2) }
                 let submitFill = state.order.side == .long ? Theme.green : Theme.red
-                let submitText = state.order.side == .long ? "确定 · 做多" : "确定 · 做空"
+                let submitText = state.order.side == .long ? "下单 · 做多" : "下单 · 做空"
                 if state.requireBiometrics {
                     Link(destination: DeepLink.submit) { islandLabel(submitText, icon: "faceid", fg: .white, bg: submitFill) }
                 } else {
@@ -205,6 +206,8 @@ struct LockScreenCard: View {
             }
             if state.phase == .listening {
                 WaveformView(levels: state.levels, color: Theme.brand, barWidth: 5, spacing: 4, maxHeight: 48).frame(maxWidth: .infinity)
+            } else if state.phase == .transcribing {
+                TranscribingLoader().frame(maxWidth: .infinity).frame(height: 48)
             }
             if !state.isPreOrder {
                 HStack(spacing: 8) {
@@ -220,6 +223,17 @@ struct LockScreenCard: View {
             ActionRow(state: state).padding(.top, 2)
         }
         .padding(14).foregroundStyle(Theme.text)
+    }
+}
+
+/// 转写中:波形位置换成加载动效
+struct TranscribingLoader: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            ProgressView().tint(Theme.brand).controlSize(.regular)
+            Image(systemName: "waveform.badge.magnifyingglass").font(.system(size: 22)).foregroundStyle(Theme.brand)
+                .symbolEffect(.variableColor.iterative, options: .repeating)
+        }
     }
 }
 

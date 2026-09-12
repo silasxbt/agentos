@@ -191,7 +191,13 @@ final class IslandFlow {
         if let confidence { s.confidence = confidence }
         s.requireBiometrics = requireBiometrics
         if phase != .listening { s.levels = []; s.recordingStartedAt = nil }
-        await activity.update(.init(state: s, staleDate: nil))
+        // 转写完成→待确认:带 alert 更新,让灵动岛重新展开成大窗口(系统在长时间录音后会自动收成小胶囊)
+        if phase == .pending {
+            let alert = AlertConfiguration(title: "语音已识别", body: LocalizedStringResource(stringLiteral: order.orderedSummary), sound: .default)
+            await activity.update(.init(state: s, staleDate: nil), alertConfiguration: alert)
+        } else {
+            await activity.update(.init(state: s, staleDate: nil))
+        }
     }
 
     private func endCurrent(immediately: Bool) async {
