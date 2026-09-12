@@ -17,7 +17,7 @@ struct TradeLiveActivity: Widget {
             let s = ctx.state
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    if s.isPreOrder {
+                    if s.isPreOrder || s.order.symbol.isEmpty {
                         HStack(spacing: 6) { Image(systemName: "hexagon.fill").foregroundStyle(Theme.brand); Text("Binance Voice").font(Theme.captionM).foregroundStyle(Theme.text2) }.padding(.leading, 4)
                     } else {
                         HStack(spacing: 6) {
@@ -27,7 +27,7 @@ struct TradeLiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    if s.isPreOrder {
+                    if s.isPreOrder || s.order.symbol.isEmpty {
                         Chip(text: "Qwen ASR", fg: Theme.brand, bg: Theme.yellowBg).padding(.trailing, 4)
                     } else {
                         HStack(spacing: 4) {
@@ -37,17 +37,22 @@ struct TradeLiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.center) {
-                    if s.phase == .listening { WaveformView(levels: s.levels, color: Theme.brand).frame(height: 34) }
-                    else if !s.isPreOrder { ConfigLine(state: s) }
+                    if !s.isPreOrder && !s.order.symbol.isEmpty { ConfigLine(state: s) }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    ActionRow(state: s).padding(.top, 4)
+                    VStack(spacing: 8) {
+                        if s.phase == .listening {
+                            WaveformView(levels: s.levels, color: Theme.brand)
+                                .frame(maxWidth: .infinity).frame(height: 40).padding(.horizontal, 4)
+                        }
+                        ActionRow(state: s)
+                    }.padding(.top, 4)
                 }
             } compactLeading: {
                 if s.phase == .listening {
                     HStack(spacing: 3) {
                         Circle().fill(Theme.red).frame(width: 6, height: 6)
-                        WaveformView(levels: Array(s.levels.suffix(9)), color: Theme.brand, barWidth: 2, spacing: 1.5).frame(width: 30, height: 14)
+                        WaveformView(levels: Array(s.levels.suffix(9)), color: Theme.brand, barWidth: 2, spacing: 1.5, maxHeight: 14)
                     }
                 } else if s.isPreOrder {
                     Image(systemName: "waveform").foregroundStyle(Theme.brand)
@@ -202,7 +207,7 @@ struct LockScreenCard: View {
                 }
             }
             if state.phase == .listening {
-                WaveformView(levels: state.levels, color: Theme.brand).frame(height: 44)
+                WaveformView(levels: state.levels, color: Theme.brand, barWidth: 5, spacing: 4, maxHeight: 48).frame(maxWidth: .infinity)
             }
             if !state.isPreOrder {
                 HStack(spacing: 8) {
@@ -227,20 +232,22 @@ struct WaveformView: View {
     var color: Color = .yellow
     var barWidth: CGFloat = 3
     var spacing: CGFloat = 2.5
+    var maxHeight: CGFloat = 40
+
+    private func height(_ l: Float) -> CGFloat {
+        let boosted = min(1, pow(CGFloat(max(0, l)), 0.55) * 1.2)
+        return max(4, maxHeight * (0.1 + 0.9 * boosted))
+    }
+
     var body: some View {
-        GeometryReader { geo in
-            let n = max(levels.count, 1)
-            let w = min(barWidth, (geo.size.width - spacing * CGFloat(n - 1)) / CGFloat(n))
-            HStack(alignment: .center, spacing: spacing) {
-                ForEach(Array(levels.enumerated()), id: \.offset) { i, l in
-                    let boosted = min(1, pow(CGFloat(l), 0.6) * 1.15)
-                    let h = max(3, geo.size.height * boosted)
-                    Capsule().fill(color.opacity(0.35 + 0.65 * Double(i + 1) / Double(n)))
-                        .frame(width: w, height: h)
-                }
+        let n = max(levels.count, 1)
+        HStack(alignment: .center, spacing: spacing) {
+            ForEach(Array(levels.enumerated()), id: \.offset) { i, l in
+                Capsule().fill(color.opacity(0.35 + 0.65 * Double(i + 1) / Double(n)))
+                    .frame(width: barWidth, height: height(l))
             }
-            .frame(width: geo.size.width, height: geo.size.height)
-            .animation(.easeOut(duration: 0.2), value: levels)
         }
+        .frame(height: maxHeight)
+        .animation(.easeOut(duration: 0.15), value: levels)
     }
 }

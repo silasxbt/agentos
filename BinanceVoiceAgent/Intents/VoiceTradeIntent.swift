@@ -19,18 +19,13 @@ struct VoiceTradeIntent: LiveActivityIntent {
 
     static var parameterSummary: some ParameterSummary { Summary("解析并下单 \(\.$command)") }
 
+    /// 不返回 dialog:结果只在灵动岛卡片上展示,避免快捷指令再弹一个系统弹窗
     @MainActor
-    func perform() async throws -> some IntentResult & ProvidesDialog {
+    func perform() async throws -> some IntentResult {
         let text0 = command?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let transcript = text0.isEmpty ? try await $command.requestValue("请说出交易指令,例如:做多比特币 十倍 全仓 200U") : text0
-        let order = await IslandFlow.shared.start(transcript: transcript)
-        return .result(dialog: IntentDialog(stringLiteral: Self.dialog(for: order, transcript: nil)))
-    }
-
-    static func dialog(for order: TradeOrder, transcript: String?) -> String {
-        let missing = order.missingFields
-        let head = transcript.map { "识别到「\($0)」" } ?? "已识别:\(order.summary)"
-        return missing.isEmpty ? "\(head)。请在灵动岛点确定下单。" : "\(head),缺少\(missing.joined(separator: "、")),请在灵动岛点编辑补全。"
+        await IslandFlow.shared.start(transcript: transcript)
+        return .result()
     }
 }
 
@@ -46,25 +41,19 @@ struct EnhancedVoiceTradeIntent: LiveActivityIntent {
 
     static var parameterSummary: some ParameterSummary { Summary("增强语音下单 \(\.$audio)") }
 
+    /// 不返回 dialog:录音 / 转写 / 结果 / 错误全部只在灵动岛卡片上展示
     @MainActor
-    func perform() async throws -> some IntentResult & ProvidesDialog {
+    func perform() async throws -> some IntentResult {
         if let audio {
             let ext = (audio.filename as NSString).pathExtension.isEmpty ? "m4a" : (audio.filename as NSString).pathExtension
             let url = FileManager.default.temporaryDirectory.appendingPathComponent("shortcut_\(UUID().uuidString.prefix(8)).\(ext)")
             try audio.data.write(to: url)
             defer { try? FileManager.default.removeItem(at: url) }
-            let transcript: String
-            do { transcript = try await DashScopeASR().transcribe(fileURL: url) }
-            catch { return .result(dialog: IntentDialog(stringLiteral: "转写失败:\(error.localizedDescription)")) }
-            let order = await IslandFlow.shared.start(transcript: transcript)
-            return .result(dialog: IntentDialog(stringLiteral: VoiceTradeIntent.dialog(for: order, transcript: transcript)))
+            await IslandFlow.shared.transcribeAndParse(fileURL: url)
+            return .result()
         }
-        do {
-            let (transcript, order) = try await IslandFlow.shared.listenAndParse()
-            return .result(dialog: IntentDialog(stringLiteral: VoiceTradeIntent.dialog(for: order, transcript: transcript)))
-        } catch {
-            return .result(dialog: IntentDialog(stringLiteral: error.localizedDescription))
-        }
+        _ = try? await IslandFlow.shared.listenAndParse()
+        return .result()
     }
 }
 

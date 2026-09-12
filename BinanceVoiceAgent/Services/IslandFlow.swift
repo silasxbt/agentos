@@ -42,9 +42,13 @@ final class IslandFlow {
 
     /// 一键:岛上显示「正在聆听」→ 说完自动停 → 「Qwen 转写中」→ 解析 → 待确认卡片
     func listenAndParse() async throws -> (transcript: String, order: TradeOrder) {
-        guard await recorder.requestPermissions() else { throw FlowError.micDenied }
         pendingDraft = nil
         await endCurrent(immediately: true)
+        guard await recorder.requestPermissions() else {
+            show(phase: .failed, order: Self.placeholder, message: FlowError.micDenied.localizedDescription)
+            await endCurrent(immediately: false)
+            throw FlowError.micDenied
+        }
         levelRing = Array(repeating: 0, count: Self.waveBars)
         show(phase: .listening, order: Self.placeholder, levels: levelRing, recordingStartedAt: Date())
         startLevelStream()
@@ -69,6 +73,20 @@ final class IslandFlow {
         return (transcript, order)
     }
 
+    /// 快捷指令传入的录音文件:岛上显示转写中 → 结果
+    func transcribeAndParse(fileURL: URL) async {
+        pendingDraft = nil
+        await endCurrent(immediately: true)
+        show(phase: .transcribing, order: Self.placeholder)
+        do {
+            let transcript = try await DashScopeASR().transcribe(fileURL: fileURL)
+            await start(transcript: transcript)
+        } catch {
+            await update(phase: .failed, order: Self.placeholder, message: "转写失败:\(error.localizedDescription)")
+            await endCurrent(immediately: false)
+        }
+    }
+
     private var activityCancelled = false
 
     /// 录音音量 → 每 0.25s 推一次到 Live Activity(波形动画)
@@ -77,7 +95,7 @@ final class IslandFlow {
             guard let self else { return }
             levelRing.removeFirst(); levelRing.append(l); levelDirty = true
         }
-        levelPump = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+        levelPump = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self, self.levelDirty, let a = self.current, a.content.state.phase == .listening else { return }
                 self.levelDirty = false
@@ -107,12 +125,12 @@ final class IslandFlow {
     }
 
     private func show(phase: TradeActivityAttributes.Phase, order: TradeOrder, confidence: Double = 1,
-                      levels: [Float] = [], recordingStartedAt: Date? = nil) {
+                      levels: [Float] = [], recordingStartedAt: Date? = nil, message: String? = nil) {
         activityCancelled = false
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { NSLog("[Island] activities disabled"); return }
         let state = TradeActivityAttributes.ContentState(order: order, phase: phase,
                                                          requireBiometrics: requireBiometrics, confidence: confidence,
-                                                         levels: levels, recordingStartedAt: recordingStartedAt)
+                                                         message: message, levels: levels, recordingStartedAt: recordingStartedAt)
         do {
             activity = try Activity.request(attributes: TradeActivityAttributes(startedAt: Date()),
                                             content: .init(state: state, staleDate: Date().addingTimeInterval(600)))
