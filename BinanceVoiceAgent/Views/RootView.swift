@@ -189,14 +189,7 @@ struct HomeView: View {
     }
 }
 
-/// Binance 六边形 Logo 近似
-struct BinanceLogo: View {
-    var size: CGFloat = 24
-    var body: some View {
-        Image(systemName: "hexagon.fill").font(.system(size: size)).foregroundStyle(Theme.brand)
-            .overlay(Image(systemName: "diamond.fill").font(.system(size: size * 0.42)).foregroundStyle(Theme.bg))
-    }
-}
+typealias BinanceLogo = BrandLogo
 
 /// 币种圆形图标(首字母,币安列表样式)
 struct CoinIcon: View {

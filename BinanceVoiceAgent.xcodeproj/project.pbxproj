@@ -20,6 +20,7 @@
 		4FE3F54110A1C3E565876F35 /* TradeLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9289F3B187010068CC9CB09 /* TradeLiveActivity.swift */; };
 		5FAA062F7FC5430DF668AE80 /* TradeOrder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773C6C2FF176C7272143007 /* TradeOrder.swift */; };
 		62D42ABA078955D77634CA27 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA345900F9C7CE6FBE443AA /* NotificationService.swift */; };
+		66B4FFD6916568F75610B1C7 /* SharedAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E5598A31003F6B7D6A2517D5 /* SharedAssets.xcassets */; };
 		77F3044E9DACA4EE71FE0C99 /* CommandParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89B239C6D10588669C223711 /* CommandParser.swift */; };
 		AAD1136E2E474978F27BEA4A /* ListeningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0B72B17826866F82704A381 /* ListeningView.swift */; };
 		BB5377EBFCB00607824DBC2C /* IslandFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CFA710B00D94ADCFD91008 /* IslandFlow.swift */; };
@@ -32,6 +33,7 @@
 		DFFB514810C0558B55BE2811 /* OrderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 542DA4AF3328654572FE38A9 /* OrderService.swift */; };
 		EF597C26D8CFAFF2F292822B /* BinanceVoiceAgentApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F3C11A8DE1A9E37A31CC8B /* BinanceVoiceAgentApp.swift */; };
 		F520A78320E39F3BC658F5D8 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC6C783D74B64564D2560F0 /* AppState.swift */; };
+		F972C9293717706F4A94146F /* SharedAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E5598A31003F6B7D6A2517D5 /* SharedAssets.xcassets */; };
 		FB17F09658C484819430AA75 /* IslandIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB07E4A014A64E176A3FA9D4 /* IslandIntents.swift */; };
 /* End PBXBuildFile section */
 
@@ -82,6 +84,7 @@
 		C5E020C95084C3BBF6EB7488 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		D06D24B264A91B1CBD35F472 /* TradeActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeActivityAttributes.swift; sourceTree = "<group>"; };
 		E0B72B17826866F82704A381 /* ListeningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningView.swift; sourceTree = "<group>"; };
+		E5598A31003F6B7D6A2517D5 /* SharedAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = SharedAssets.xcassets; sourceTree = "<group>"; };
 		E7F3C11A8DE1A9E37A31CC8B /* BinanceVoiceAgentApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinanceVoiceAgentApp.swift; sourceTree = "<group>"; };
 		ED239E0A1849B9300339C4AD /* BinanceVoiceWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = BinanceVoiceWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F91AA831B690B440237D5D29 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
@@ -134,6 +137,7 @@
 			isa = PBXGroup;
 			children = (
 				FB07E4A014A64E176A3FA9D4 /* IslandIntents.swift */,
+				E5598A31003F6B7D6A2517D5 /* SharedAssets.xcassets */,
 				0E007B2E67CBB240E8DE6FEE /* Theme.swift */,
 				D06D24B264A91B1CBD35F472 /* TradeActivityAttributes.swift */,
 			);
@@ -221,6 +225,7 @@
 			buildConfigurationList = A9C7D161E84B29A799FFEDE5 /* Build configuration list for PBXNativeTarget "BinanceVoiceWidget" */;
 			buildPhases = (
 				6F78CDBBB064DC2E5A42F9B0 /* Sources */,
+				386A0C0960A3434BEC0B6084 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -273,11 +278,20 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		386A0C0960A3434BEC0B6084 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F972C9293717706F4A94146F /* SharedAssets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F2A63B4E4142031EAD5DA1A5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				2CD46A7E3121772DE04BE387 /* Assets.xcassets in Resources */,
+				66B4FFD6916568F75610B1C7 /* SharedAssets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

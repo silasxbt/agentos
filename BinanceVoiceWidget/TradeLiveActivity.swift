@@ -18,7 +18,7 @@ struct TradeLiveActivity: Widget {
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     if s.isPreOrder || s.order.symbol.isEmpty {
-                        HStack(spacing: 6) { Image(systemName: "hexagon.fill").foregroundStyle(Theme.brand); Text("Binance Voice").font(Theme.captionM).foregroundStyle(Theme.text2) }.padding(.leading, 4)
+                        HStack(spacing: 6) { BrandLogo(size: 20); Text("Binance Voice").font(Theme.captionM).foregroundStyle(Theme.text2) }.padding(.leading, 4)
                     } else {
                         HStack(spacing: 6) {
                             SideBadge(side: s.order.side)
@@ -62,7 +62,7 @@ struct TradeLiveActivity: Widget {
             } compactTrailing: {
                 PhaseTag(state: s)
             } minimal: {
-                Image(systemName: "hexagon.fill").foregroundStyle(Theme.brand)
+                BrandLogo(size: 18)
             }
             .keylineTint(Theme.brand)
             .widgetURL(DeepLink.edit)
@@ -117,7 +117,7 @@ struct ConfigLine: View {
                 Spacer(minLength: 0)
             }.lineLimit(1).minimumScaleFactor(0.7)
             if !o.missingFields.isEmpty {
-                Text("缺少:\(o.missingFields.joined(separator: "、")),请点编辑").font(Theme.tiny).foregroundStyle(Theme.red)
+                Text("缺少:\(o.missingFields.joined(separator: "、")),点确定或编辑进 App 补全").font(Theme.tiny).foregroundStyle(Theme.red)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -153,15 +153,16 @@ struct ActionRow: View {
                 Button(intent: CancelFromIslandIntent()) { islandLabel("取消", fg: Theme.text, bg: Theme.card2) }
                     .buttonStyle(.plain)
                 Link(destination: DeepLink.edit) { islandLabel("编辑", fg: Theme.text, bg: Theme.card2) }
-                if state.order.missingFields.isEmpty {
-                    let submitFill = state.order.side == .long ? Theme.green : Theme.red
-                    let submitText = state.order.side == .long ? "确定 · 做多" : "确定 · 做空"
-                    if state.requireBiometrics {
-                        Link(destination: DeepLink.submit) { islandLabel(submitText, icon: "faceid", fg: .white, bg: submitFill) }
-                    } else {
-                        Button(intent: SubmitFromIslandIntent()) { islandLabel(submitText, fg: .white, bg: submitFill) }
-                            .buttonStyle(.plain)
-                    }
+                let submitFill = state.order.side == .long ? Theme.green : Theme.red
+                let submitText = state.order.side == .long ? "确定 · 做多" : "确定 · 做空"
+                if !state.order.missingFields.isEmpty {
+                    // 缺字段:确定 → 进 App 补全后提交
+                    Link(destination: DeepLink.edit) { islandLabel(submitText, icon: "exclamationmark.circle", fg: .white, bg: submitFill.opacity(0.55)) }
+                } else if state.requireBiometrics {
+                    Link(destination: DeepLink.submit) { islandLabel(submitText, icon: "faceid", fg: .white, bg: submitFill) }
+                } else {
+                    Button(intent: SubmitFromIslandIntent()) { islandLabel(submitText, fg: .white, bg: submitFill) }
+                        .buttonStyle(.plain)
                 }
             }
         case .submitting:
@@ -196,7 +197,7 @@ struct LockScreenCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Image(systemName: "hexagon.fill").foregroundStyle(Theme.brand)
+                BrandLogo(size: 18)
                 Text("Binance Voice").font(Theme.captionM).foregroundStyle(Theme.text2)
                 Spacer()
                 if state.isPreOrder {

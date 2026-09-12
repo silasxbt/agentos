@@ -165,3 +165,13 @@ extension View {
         overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1).padding(.leading, leading) }
     }
 }
+
+/// App 图标同款品牌 Logo(App 与灵动岛共用)
+struct BrandLogo: View {
+    var size: CGFloat = 24
+    var body: some View {
+        Image("BrandLogo").resizable().scaledToFit()
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
+    }
+}
