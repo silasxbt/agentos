@@ -64,7 +64,7 @@ struct DashScopeASR {
         field("x-oss-forbid-overwrite", p.x_oss_forbid_overwrite)
         field("key", key)
         field("success_action_status", "200")
-        body.append("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\(fileURL.lastPathComponent)\"\r\nContent-Type: audio/wav\r\n\r\n".data(using: .utf8)!)
+        body.append("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\(fileURL.lastPathComponent)\"\r\nContent-Type: \(Self.mime(for: fileURL))\r\n\r\n".data(using: .utf8)!)
         body.append(try Data(contentsOf: fileURL))
         body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
 
@@ -76,6 +76,16 @@ struct DashScopeASR {
         let code = (r as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(code) else { throw ASRError.http(code, String(data: d, encoding: .utf8) ?? "OSS upload failed") }
         return "oss://\(key)"
+    }
+
+    private static func mime(for url: URL) -> String {
+        switch url.pathExtension.lowercased() {
+        case "wav": return "audio/wav"
+        case "m4a", "aac", "mp4": return "audio/mp4"
+        case "mp3": return "audio/mpeg"
+        case "caf": return "audio/x-caf"
+        default: return "application/octet-stream"
+        }
     }
 
     // MARK: - 2. 提交异步任务

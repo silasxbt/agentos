@@ -274,14 +274,14 @@ struct SettingsView: View {
                             Toggle("", isOn: $state.requireBiometrics).labelsHidden().tint(Theme.green)
                         }.padding(16)
                     }
-                    group("Action Button 全局触发(不打开 App)") {
-                        VStack(alignment: .leading, spacing: 12) {
-                            step(1, "打开「快捷指令」App,新建快捷指令")
-                            step(2, "添加动作「听写文本」(语言:中文)")
-                            step(3, "添加动作「Binance Voice → 语音下单(灵动岛)」,把听写文本接到「交易指令」")
-                            step(4, "设置 → 操作按钮 → 快捷指令 → 选择它")
-                            Text("之后在 Coinglass / TradingView 任意界面按侧键:说指令 → 灵动岛显示配置 → 点「下单」→ 通知成交。")
-                                .font(Theme.caption).foregroundStyle(Theme.text3)
+                    group("三种触发方式") {
+                        VStack(alignment: .leading, spacing: 14) {
+                            path("内置语音", "Apple 内置 · 打开 App", Theme.green,
+                                 "设置 → 操作按钮 → 快捷指令 → 「Binance Voice → 内置语音」。打开 App 录音,App 内用 Qwen 转写并进入确认页。")
+                            path("全局语音", "Apple 听写 · 不开 App", Theme.brand,
+                                 "快捷指令:「听写文本」(中文)→「Binance Voice → 全局语音下单」,听写结果接到「交易指令」。任意界面按侧键 → 灵动岛确认。")
+                            path("增强语音", "Qwen 云端转写 · 不开 App", Theme.yellow,
+                                 "快捷指令:「录制音频」(停顿后停止)→「Binance Voice → 增强语音下单」,录音接到「录音文件」。后台上传 DashScope 转写 → 灵动岛确认。")
                         }.padding(16)
                     }
                     group("关于") {
@@ -305,6 +305,15 @@ struct SettingsView: View {
             Text(title).font(Theme.caption).foregroundStyle(Theme.text3).padding(.horizontal, 4)
             content().frame(maxWidth: .infinity, alignment: .leading)
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.r8))
+        }
+    }
+    private func path(_ name: String, _ tag: String, _ color: Color, _ desc: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Text(name).font(Theme.bodyM).foregroundStyle(Theme.text)
+                Chip(text: tag, fg: color, bg: color.opacity(0.12))
+            }
+            Text(desc).font(Theme.caption).foregroundStyle(Theme.text3)
         }
     }
     private func step(_ n: Int, _ t: String) -> some View {
