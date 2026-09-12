@@ -1,7 +1,7 @@
 import Foundation
 import AVFoundation
 
-/// 录音 → 16kHz 单声道 WAV → DashScope qwen-audio-3.0-asr-flash-filetrans 转写。
+/// 录音 → 16kHz 单声道 WAV → 云端 ASR 转写。
 /// 不使用苹果 SFSpeechRecognizer。对外接口与旧版保持一致。
 @MainActor
 final class SpeechService: NSObject, ObservableObject {
@@ -14,17 +14,11 @@ final class SpeechService: NSObject, ObservableObject {
     private let engine = AVAudioEngine()
     private var file: AVAudioFile?
     private var fileURL: URL?
-    private var silenceTimer: Timer?
-    private var heardSpeech = false
-    private var maxTimer: Timer?
     var onFinal: ((String) -> Void)?
     /// 设置后,录音结束只回传文件、不在本类内转写(灵动岛链路使用)
     private var onRecorded: ((URL?) -> Void)?
 
     private static let sampleRate: Double = 16_000
-    private static let silenceThreshold: Float = 0.06   // rms(放大后)低于此视为静音
-    private static let silenceWindow: TimeInterval = 1.6
-    private static let maxDuration: TimeInterval = 30
 
     func requestPermissions() async -> Bool {
         let mic: Bool
@@ -36,7 +30,7 @@ final class SpeechService: NSObject, ObservableObject {
 
     func start() {
         guard !isListening, !isTranscribing else { return }
-        transcript = ""; errorMessage = nil; heardSpeech = false
+        transcript = ""; errorMessage = nil
         // 演示:-demoAudio /path.wav 直接走云端转写,不录音
         let args = ProcessInfo.processInfo.arguments
         if let i = args.firstIndex(of: "-demoAudio"), i + 1 < args.count {
@@ -77,31 +71,13 @@ final class SpeechService: NSObject, ObservableObject {
                     guard let self, self.isListening else { return }
                     if err == nil, out.frameLength > 0 { try? self.file?.write(from: out) }
                     self.level = min(1, rms * 12)
-                    self.onLevel(min(1, rms * 12))
                 }
             }
             engine.prepare(); try engine.start()
             isListening = true
-            maxTimer = Timer.scheduledTimer(withTimeInterval: Self.maxDuration, repeats: false) { [weak self] _ in
-                Task { @MainActor in self?.finish() }
-            }
         } catch {
             errorMessage = "无法启动录音: \(error.localizedDescription)"
             stopEngine()
-        }
-    }
-
-    /// 检测到说话后,静音 1.6s 视为说完
-    private func onLevel(_ l: Float) {
-        if l > Self.silenceThreshold {
-            heardSpeech = true
-            silenceTimer?.invalidate()
-            silenceTimer = Timer.scheduledTimer(withTimeInterval: Self.silenceWindow, repeats: false) { [weak self] _ in
-                Task { @MainActor in
-                    guard let self, self.isListening, self.heardSpeech else { return }
-                    self.finish()
-                }
-            }
         }
     }
 
@@ -114,8 +90,8 @@ final class SpeechService: NSObject, ObservableObject {
         transcribe(url)
     }
 
-    /// 录一段(说完自动停,或达到上限),返回 16kHz WAV 文件;不做转写。
-    func recordOnce(maxSeconds: TimeInterval? = nil) async throws -> URL {
+    /// 录一段(仅由用户点「停止」结束),返回 16kHz WAV 文件;不做转写。
+    func recordOnce() async throws -> URL {
         if isListening { cancel() }
         return try await withCheckedThrowingContinuation { cont in
             onRecorded = { url in
@@ -124,10 +100,6 @@ final class SpeechService: NSObject, ObservableObject {
             }
             start()
             if let msg = errorMessage { onRecorded = nil; cont.resume(throwing: NSError(domain: "Speech", code: 2, userInfo: [NSLocalizedDescriptionKey: msg])); return }
-            if let maxSeconds {
-                maxTimer?.invalidate()
-                maxTimer = Timer.scheduledTimer(withTimeInterval: maxSeconds, repeats: false) { [weak self] _ in Task { @MainActor in self?.finish() } }
-            }
         }
     }
 
@@ -154,7 +126,6 @@ final class SpeechService: NSObject, ObservableObject {
     }
 
     private func stopEngine() {
-        silenceTimer?.invalidate(); maxTimer?.invalidate()
         isListening = false; level = 0
         if engine.isRunning { engine.stop() }
         engine.inputNode.removeTap(onBus: 0)

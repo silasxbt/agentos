@@ -18,8 +18,7 @@ struct ListeningView: View {
                 Text("Agent 正在理解指令…").font(Theme.h2).padding(.top, 16)
             } else if speech.isTranscribing {
                 ProgressView().controlSize(.large).tint(Theme.brand)
-                Text("Qwen 语音转写中…").font(Theme.h2).padding(.top, 16)
-                Text("qwen-audio-3.0-asr-flash-filetrans").font(Theme.tiny).foregroundStyle(Theme.text3).padding(.top, 4)
+                Text("语音识别中…").font(Theme.h2).padding(.top, 16)
             } else {
                 TimelineView(.animation(minimumInterval: 1.0 / 30)) { tl in
                     Waveform(level: speech.level, phase: tl.date.timeIntervalSinceReferenceDate)
@@ -54,7 +53,7 @@ struct ListeningView: View {
                         Image(systemName: "stop.fill").font(.system(size: 24)).foregroundStyle(Theme.onYellow)
                     }
                 }.buttonStyle(.plain)
-                Text("说完后停顿,或点击结束").font(Theme.caption).foregroundStyle(Theme.text3).padding(.top, 12)
+                Text("说完后点击结束").font(Theme.caption).foregroundStyle(Theme.text3).padding(.top, 12)
             }
         }
         .padding(.bottom, 32)

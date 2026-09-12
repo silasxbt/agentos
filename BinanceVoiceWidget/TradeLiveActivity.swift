@@ -28,7 +28,7 @@ struct TradeLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     if s.isPreOrder || s.order.symbol.isEmpty {
-                        Chip(text: "Qwen ASR", fg: Theme.brand, bg: Theme.yellowBg).padding(.trailing, 4)
+                        Chip(text: "语音下单", fg: Theme.brand, bg: Theme.yellowBg).padding(.trailing, 4)
                     } else {
                         HStack(spacing: 4) {
                             Chip(text: s.order.marginMode == .cross ? "全仓" : "逐仓", fg: Theme.brand, bg: Theme.yellowBg)
@@ -137,7 +137,7 @@ struct ActionRow: View {
                         Text("录音中").font(Theme.bodyM).foregroundStyle(Theme.text)
                         if let t = state.recordingStartedAt { Text(t, style: .timer).font(Theme.bodyM).monospacedDigit().foregroundStyle(Theme.red).frame(width: 44, alignment: .leading) }
                     } else {
-                        Text("Qwen 识别中…").font(Theme.body).foregroundStyle(Theme.text2)
+                        Text("语音识别中…").font(Theme.body).foregroundStyle(Theme.text2)
                     }
                     Spacer(minLength: 0)
                 }
@@ -198,7 +198,7 @@ struct LockScreenCard: View {
                 Text("Binance Voice").font(Theme.captionM).foregroundStyle(Theme.text2)
                 Spacer()
                 if state.isPreOrder {
-                    Chip(text: "Qwen ASR", fg: Theme.brand, bg: Theme.yellowBg)
+                    Chip(text: "语音下单", fg: Theme.brand, bg: Theme.yellowBg)
                 } else {
                     Chip(text: "置信度 \(Int(state.confidence * 100))%", fg: state.confidence > 0.7 ? Theme.green : Theme.brand,
                          bg: state.confidence > 0.7 ? Theme.greenBg : Theme.yellowBg)

@@ -11,7 +11,7 @@ SwiftUI 原生 iOS App:**Action Button → 语音听写 → Agent 结构化解�
 | 路径 | 语音识别 | 触发 | Intent | 结果 |
 |---|---|---|---|---|
 | **全局语音** | Apple 内置听写 | 快捷指令「听写文本」→ 全局语音下单 | `VoiceTradeIntent` | 灵动岛卡片:取消 / 编辑 / 下单 |
-| **增强语音** | App 内置 Qwen ASR(Key 预置) | 直接绑定「增强语音」,一键录音 | `EnhancedVoiceTradeIntent` | 灵动岛卡片:取消 / 编辑 / 下单 |
+| **增强语音** | App 内置增强识别(Key 预置) | 直接绑定「增强语音」,一键录音 | `EnhancedVoiceTradeIntent` | 灵动岛卡片:取消 / 编辑 / 下单 |
 
 ### 灵动岛卡片(两条路径共用)
 卡片显示 **币种 / 方向 / 杠杆 / 全仓逐仓 / 保证金 / 止盈止损 / 置信度**,底部三个按钮:
@@ -23,10 +23,10 @@ SwiftUI 原生 iOS App:**Action Button → 语音听写 → Agent 结构化解�
 ### 全局语音(Apple 听写)
 在任何 App(Coinglass / TradingView…)按下 **Action Button** → 系统「听写文本」录音 → 文本传给 `VoiceTradeIntent`(`openAppWhenRun = false`)→ 后台解析并弹出 Live Activity。
 
-### 增强语音(内置 Qwen,一键)
+### 增强语音(App 内置增强识别,一键)
 `EnhancedVoiceTradeIntent` 在 **App 进程内** 执行(`openAppWhenRun = false`,App 不会切到前台;`UIBackgroundModes: audio`):
-1. 灵动岛立刻显示「正在聆听」,`SpeechService` 用 `AVAudioEngine` 录 16kHz WAV,说完静音 1.6s 自动停止(最长 15s)。
-2. 卡片变为「Qwen 转写中」,`DashScopeASR` 用内置 Key 上传转写(2~4 秒)。
+1. 灵动岛立刻显示「正在聆听」,`SpeechService` 用 `AVAudioEngine` 录 16kHz WAV,录音**只由用户点岛上「停止」结束**(无静音/超时自动停止)。
+2. 卡片波形处变为加载动效「语音识别中」,`DashScopeASR` 用内置 Key 上传转写(2~4 秒)。
 3. `CommandParser` 解析后,卡片更新为待确认订单:取消 / 编辑 / 下单。
 兼容:若快捷指令里把「录制音频」的输出接到「录音文件」参数,则跳过录音直接转写该文件。
 
@@ -47,7 +47,7 @@ SwiftUI 原生 iOS App:**Action Button → 语音听写 → Agent 结构化解�
 `CommandParser` 把自然语言解析为 `TradeOrder`:币种(支持大饼/以太坊等别名)、方向、杠杆、全仓/逐仓、保证金(中文数字、万/千、U/USDT/美元)、止盈止损(价格或百分比),并给出置信度与说明。
 
 ## 语音转写:Qwen ASR(不使用苹果语音识别)
-App 内听写不走 `SFSpeechRecognizer`,而是:`AVAudioEngine` 录音 → 16kHz 单声道 WAV(说话后静音 1.6s 自动结束,最长 30s)→ 阿里云百炼 DashScope **`qwen-audio-3.0-asr-flash-filetrans`** 录音文件转写 → 文本交给 `CommandParser`。
+App 内听写不走 `SFSpeechRecognizer`,而是:`AVAudioEngine` 录音 → 16kHz 单声道 WAV(用户点「结束/停止」才结束录音)→ 阿里云百炼 DashScope **`qwen-audio-3.0-asr-flash-filetrans`** 录音文件转写 → 文本交给 `CommandParser`。
 
 实现见 `Services/DashScopeASR.swift`:`GET /uploads?action=getPolicy` 获取临时凭证 → multipart 上传到 OSS → `POST /services/audio/asr/transcription`(`X-DashScope-Async` + `X-DashScope-OssResourceResolve`)→ 轮询 `/tasks/{id}` → 拉取 `transcription_url` JSON 的 `transcripts[].text`。
 
@@ -56,7 +56,6 @@ App 内听写不走 `SFSpeechRecognizer`,而是:`AVAudioEngine` 录音 → 16kHz
 cp BinanceVoiceAgent/Config/Secrets.example.swift.template BinanceVoiceAgent/Config/Secrets.swift
 # 编辑 Secrets.swift 填入 sk-…;该文件已在 .gitignore 中
 ```
-也可在 App「设置 → 语音转写模型」里临时覆盖 Key(存 UserDefaults)。
 
 调试:`-demoAudio /path/to.wav` 启动参数会跳过录音、直接把该文件送云端转写,用于模拟器验证整条链路。
 

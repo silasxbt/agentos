@@ -241,13 +241,6 @@ struct SettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 12) {
-                    group("内置语音模型") {
-                        VStack(spacing: 0) {
-                            kv("提供方", "阿里云百炼 DashScope")
-                            kv("模型", DashScopeASR.model)
-                            kv("配置", "App 内置,无需用户设置", last: true)
-                        }
-                    }
                     group("安全") {
                         HStack(alignment: .top, spacing: 12) {
                             VStack(alignment: .leading, spacing: 4) {
@@ -262,15 +255,15 @@ struct SettingsView: View {
                     group("两种触发方式(均不打开 App)") {
                         VStack(alignment: .leading, spacing: 14) {
                             path("全局语音", "Apple 听写 · 灵动岛确认", Theme.brand,
-                                 "快捷指令:「听写文本」(中文)→「Binance Voice → 全局语音下单」,听写结果接到「交易指令」。任意界面按侧键 → 灵动岛 取消 / 编辑 / 确定。")
-                            path("增强语音", "内置 Qwen · 一键录音", Theme.yellow,
-                                 "设置 → 操作按钮 → 快捷指令 → 「Binance Voice → 增强语音」。按下直接录音(App 保持后台),说完自动停止,Qwen 转写后灵动岛显示结果:取消 / 编辑 / 确定。确定 → 立刻通知下单成功或失败;编辑 → 打开 App,字段已回填。")
+                                 "快捷指令:「听写文本」(中文)→「Binance Voice → 全局语音下单」,听写结果接到「交易指令」。任意界面按侧键 → 灵动岛 取消 / 编辑 / 下单。")
+                            path("增强语音", "增强识别 · 一键录音", Theme.yellow,
+                                 "设置 → 操作按钮 → 快捷指令 → 「Binance Voice → 增强语音」。按下直接录音(App 保持后台),点「停止」后识别,灵动岛显示结果:取消 / 编辑 / 下单。下单 → 立刻通知成功或失败;编辑 → 打开 App,字段已回填。")
                         }.padding(16)
                     }
                     group("关于") {
                         VStack(spacing: 0) {
                             kv("下单通道", "模拟 USDⓈ-M 合约")
-                            kv("语音识别", "Qwen ASR(不使用苹果语音)")
+                            kv("语音识别", "App 内置增强识别")
                             kv("版本", "1.0", last: true)
                         }
                     }

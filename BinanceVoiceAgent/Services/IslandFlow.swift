@@ -28,7 +28,7 @@ final class IslandFlow {
         TradeOrder(symbol: "", side: .long, leverage: 0, marginMode: .cross, notionalUSDT: 0)
     }
 
-    // MARK: - 增强语音:录音 → Qwen → 岛上确认(全程不打开 App)
+    // MARK: - 增强语音:录音 → 云端 ASR → 岛上确认(全程不打开 App)
 
     enum FlowError: LocalizedError {
         case micDenied, cancelled
@@ -40,7 +40,7 @@ final class IslandFlow {
         }
     }
 
-    /// 一键:岛上显示「正在聆听」→ 说完自动停 → 「Qwen 转写中」→ 解析 → 待确认卡片
+    /// 一键:岛上显示「正在聆听」→ 点「停止」→ 「识别中」→ 解析 → 待确认卡片
     func listenAndParse() async throws -> (transcript: String, order: TradeOrder) {
         pendingDraft = nil
         await endCurrent(immediately: true)
@@ -53,7 +53,7 @@ final class IslandFlow {
         show(phase: .listening, order: Self.placeholder, levels: levelRing, recordingStartedAt: Date())
         startLevelStream()
         let url: URL
-        do { url = try await recorder.recordOnce(maxSeconds: 15) }
+        do { url = try await recorder.recordOnce() }
         catch {
             stopLevelStream()
             await endCurrent(immediately: true)
