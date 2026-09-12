@@ -98,7 +98,7 @@ struct ConfirmView: View {
                     Image(systemName: "quote.opening").font(Theme.tiny).foregroundStyle(Theme.text4).padding(.top, 3)
                     Text(o.rawTranscript).font(Theme.body).foregroundStyle(Theme.text2)
                 }
-                Text(o.summary).font(Theme.bodyM).foregroundStyle(Theme.text)
+                Text(o.orderedSummary).font(Theme.bodyM).foregroundStyle(Theme.text)
                 ForEach(state.agentNotes, id: \.self) { n in
                     HStack(alignment: .top, spacing: 6) {
                         Image(systemName: "info.circle").font(Theme.caption).padding(.top, 1)

@@ -59,6 +59,26 @@ struct TradeOrder: Codable, Identifiable, Hashable {
     }
 
     /// 解析后缺失的必填字段
+    /// 固定顺序的字段整理:币种 · 全仓/逐仓 · 杠杆 · 方向 · 仓位 · 止盈 · 止损
+    var orderedFields: [(label: String, value: String)] {
+        var f: [(String, String)] = [
+            ("币种", symbol.isEmpty ? "未识别" : baseAsset),
+            ("模式", marginMode == .cross ? "全仓" : "逐仓"),
+            ("杠杆", leverage < 1 ? "未识别" : "\(leverage)倍"),
+            ("方向", side == .long ? "做多" : "做空"),
+            ("仓位", notionalUSDT <= 0 ? "未识别" : Fmt.u(notionalUSDT)),
+        ]
+        if let tp = takeProfit { f.append(("止盈", tp.display)) }
+        if let sl = stopLoss { f.append(("止损", sl.display)) }
+        return f
+    }
+    /// 例:BTC 全仓 5倍 做多 · 仓位 200U
+    var orderedSummary: String {
+        let head = orderedFields.prefix(4).map(\.value).joined(separator: " ")
+        let tail = orderedFields.dropFirst(4).map { "\($0.label) \($0.value)" }.joined(separator: " · ")
+        return head + " · " + tail
+    }
+
     var missingFields: [String] {
         var m: [String] = []
         if symbol.isEmpty { m.append("币种") }
@@ -87,4 +107,5 @@ enum Fmt {
         return f.string(from: v as NSNumber) ?? "\(v)"
     }
     static func usdt(_ v: Double) -> String { price(v) + " USDT" }
+    static func u(_ v: Double) -> String { price(v) + "U" }
 }

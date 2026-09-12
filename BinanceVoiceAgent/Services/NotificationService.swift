@@ -30,7 +30,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     func notifyFailed(_ o: TradeOrder, reason: String) {
         let content = UNMutableNotificationContent()
         content.title = "❌ 下单失败"
-        content.body = "\(o.summary)\n\(reason)"
+        content.body = "\(o.orderedSummary)\n\(reason)"
         content.sound = .defaultCritical
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
     }

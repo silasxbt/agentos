@@ -139,19 +139,19 @@ final class IslandFlow {
     }
 
     /// 灵动岛「确定」(Face ID 关闭)/ App 内 Face ID 通过后调用 → 立刻推送成功/失败通知
+    /// 灵动岛「确定」:卡片立即消失,后台下单,成功/失败立刻以通知弹出
     func submitPending() async {
         guard let order = pendingDraft else { return }
-        await update(phase: .submitting, order: order)
+        pendingDraft = nil
+        await endCurrent(immediately: true)
         do {
             let filled = try await AppState.shared.orders.submit(order)
             NotificationService.shared.notifyFilled(filled)
-            await update(phase: .filled, order: order, entry: filled.entryPrice, orderId: filled.orderId)
+            NSLog("[Island] submitted ok #\(filled.orderId)")
         } catch {
             NotificationService.shared.notifyFailed(order, reason: error.localizedDescription)
-            await update(phase: .failed, order: order, message: error.localizedDescription)
+            NSLog("[Island] submit failed: \(error.localizedDescription)")
         }
-        pendingDraft = nil
-        await endCurrent(immediately: false)
     }
 
     /// 灵动岛「完成」:手动结束录音,立即进入转写

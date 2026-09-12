@@ -37,7 +37,7 @@ struct TradeLiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.center) {
-                    if !s.isPreOrder && !s.order.symbol.isEmpty { ConfigLine(state: s) }
+                    if !s.isPreOrder { ConfigLine(state: s) }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(spacing: 8) {
@@ -101,25 +101,24 @@ struct PhaseTag: View {
 
 struct ConfigLine: View {
     let state: TradeActivityAttributes.ContentState
-    private func kv(_ k: String, _ v: String, _ c: Color) -> some View {
-        HStack(spacing: 4) {
-            Text(k).font(Theme.caption).foregroundStyle(Theme.text3)
-            Text(v).font(Theme.captionM).foregroundStyle(c)
-        }
-    }
     var body: some View {
         let o = state.order
-        VStack(spacing: 3) {
-            HStack(spacing: 12) {
-                kv("保证金", Fmt.usdt(o.notionalUSDT), Theme.text)
-                if let tp = o.takeProfit { kv("止盈", tp.display, Theme.green) }
-                if let sl = o.stopLoss { kv("止损", sl.display, Theme.red) }
-                Spacer(minLength: 0)
-            }.lineLimit(1).minimumScaleFactor(0.7)
-            if !o.missingFields.isEmpty {
-                Text("缺少:\(o.missingFields.joined(separator: "、")),点确定或编辑进 App 补全").font(Theme.tiny).foregroundStyle(Theme.red)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+        HStack(spacing: 0) {
+            ForEach(Array(o.orderedFields.enumerated()), id: \.offset) { i, f in
+                if i > 0 { Text(" · ").font(Theme.caption).foregroundStyle(Theme.text3) }
+                Text(f.value).font(Theme.captionM)
+                    .foregroundStyle(f.value == "未识别" ? Theme.red : color(for: f.label, o))
             }
+            Spacer(minLength: 0)
+        }.lineLimit(1).minimumScaleFactor(0.65)
+    }
+    private func color(for label: String, _ o: TradeOrder) -> Color {
+        switch label {
+        case "方向": return o.side == .long ? Theme.green : Theme.red
+        case "止盈": return Theme.green
+        case "止损": return Theme.red
+        case "模式", "杠杆": return Theme.brand
+        default: return Theme.text
         }
     }
 }
@@ -155,10 +154,7 @@ struct ActionRow: View {
                 Link(destination: DeepLink.edit) { islandLabel("编辑", fg: Theme.text, bg: Theme.card2) }
                 let submitFill = state.order.side == .long ? Theme.green : Theme.red
                 let submitText = state.order.side == .long ? "确定 · 做多" : "确定 · 做空"
-                if !state.order.missingFields.isEmpty {
-                    // 缺字段:确定 → 进 App 补全后提交
-                    Link(destination: DeepLink.edit) { islandLabel(submitText, icon: "exclamationmark.circle", fg: .white, bg: submitFill.opacity(0.55)) }
-                } else if state.requireBiometrics {
+                if state.requireBiometrics {
                     Link(destination: DeepLink.submit) { islandLabel(submitText, icon: "faceid", fg: .white, bg: submitFill) }
                 } else {
                     Button(intent: SubmitFromIslandIntent()) { islandLabel(submitText, fg: .white, bg: submitFill) }

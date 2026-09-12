@@ -17,9 +17,10 @@ final class OrderService: ObservableObject {
     }
 
     enum OrderError: LocalizedError {
-        case unknownSymbol, insufficientBalance, network
+        case noSymbol, unknownSymbol, insufficientBalance, network
         var errorDescription: String? {
             switch self {
+            case .noSymbol: return "未识别币种,请重新说明(如:比特币 / ETH)"
             case .unknownSymbol: return "交易对不存在"
             case .insufficientBalance: return "可用保证金不足(可用 \(Fmt.usdt(OrderService.availableBalance)))"
             case .network: return "网络超时,请重试"
@@ -30,7 +31,7 @@ final class OrderService: ObservableObject {
     @MainActor
     func submit(_ order: TradeOrder) async throws -> FilledOrder {
         // 1) 设置杠杆 POST /fapi/v1/leverage  2) 设置仓位模式 POST /fapi/v1/marginType  3) 市价开仓 POST /fapi/v1/order
-        try await Task.sleep(for: .milliseconds(900))
+        guard !order.symbol.isEmpty else { throw OrderError.noSymbol }
         guard let mark = Self.markPrice(order.symbol) else { throw OrderError.unknownSymbol }
         guard order.notionalUSDT <= Self.availableBalance else { throw OrderError.insufficientBalance }
         let slippage = 1 + Double.random(in: -0.0004...0.0004)
