@@ -5,8 +5,10 @@ import Combine
 
 /// 灵动岛链路:快捷指令(听写 / 增强语音)→ 本类 → Live Activity → 取消 / 编辑 / 确定
 @MainActor
-final class IslandFlow {
+final class IslandFlow: ObservableObject {
     static let shared = IslandFlow()
+    /// 增强语音录音进行中(供 App 前台时显示录音面板)
+    @Published var isRecording = false
     private let draftKey = "island.pendingDraft"
     private var activity: Activity<TradeActivityAttributes>?
     /// 增强语音:App 进程内直接录音(不切前台)
@@ -55,12 +57,14 @@ final class IslandFlow {
             return
         }
         show(phase: .listening, order: Self.placeholder, recordingStartedAt: Date())
+        isRecording = true
         startLevelStream()
         Task { await self.runRecording(gen: gen) }
     }
 
     private func runRecording(gen: Int) async {
         let url: URL
+        defer { if gen == flowGen { isRecording = false } }
         do { url = try await recorder.recordOnce() }
         catch {
             guard gen == flowGen else { NSLog("[Island] stale flow \(gen) ended: \(error.localizedDescription)"); return }

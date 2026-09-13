@@ -1,4 +1,5 @@
 import AppIntents
+import UIKit
 import SwiftUI
 
 // 两条路径(都不打开 App,结果在灵动岛悬浮卡片确认:取消 / 编辑 / 确定):
@@ -31,7 +32,7 @@ struct VoiceTradeIntent: LiveActivityIntent {
 
 /// 增强语音:一键触发。App 进程内后台录音(不切到 App)→ 内置增强识别 → 灵动岛 取消/编辑/下单。
 /// 兼容:若快捷指令里接了「录制音频」的输出,则直接转写该文件。
-struct EnhancedVoiceTradeIntent: LiveActivityIntent {
+struct EnhancedVoiceTradeIntent: LiveActivityIntent, ForegroundContinuableIntent {
     static let title: LocalizedStringResource = "增强语音下单"
     static let description = IntentDescription("一键录音,由 App 内置增强识别转写,结果在灵动岛确认,不打开 App")
     static let openAppWhenRun = false
@@ -51,6 +52,11 @@ struct EnhancedVoiceTradeIntent: LiveActivityIntent {
             defer { try? FileManager.default.removeItem(at: url) }
             await IslandFlow.shared.transcribeAndParse(fileURL: url)
             return .result()
+        }
+        // 真机限制:App 在后台时系统不允许开启麦克风(模拟器不校验)。
+        // 快捷指令拉起的 App 处于后台,先切到前台再开始录音;录音开始后回桌面/锁屏,灵动岛常驻。
+        if UIApplication.shared.applicationState != .active {
+            try await requestToContinueInForeground()
         }
         await IslandFlow.shared.beginListening()
         return .result()

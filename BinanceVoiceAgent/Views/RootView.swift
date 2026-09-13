@@ -2,16 +2,21 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var state: AppState
+    @ObservedObject private var island = IslandFlow.shared
 
     var body: some View {
         ZStack {
             Theme.bg.ignoresSafeArea()
+            if island.isRecording {
+                IslandRecordingView()
+            } else {
             switch state.stage {
             case .idle: HomeView()
             case .listening, .parsing: ListeningView()
             case .confirm, .authenticating, .submitting: ConfirmView()
             case .success(let f): ResultView(filled: f)
             case .failed(let msg): FailedView(message: msg)
+            }
             }
         }
         .foregroundStyle(Theme.text)
@@ -302,5 +307,35 @@ struct SettingsView: View {
         HStack { Text(k).font(Theme.body).foregroundStyle(Theme.text3); Spacer(); Text(v).font(Theme.body).foregroundStyle(Theme.text) }
             .padding(.horizontal, 16).frame(height: 48)
             .bnDivider(leading: last ? 1000 : 16)
+    }
+}
+
+// MARK: - 增强语音:App 被快捷指令切到前台开始录音时的面板
+/// 真机只能在前台开启麦克风;录音开始后用户回桌面/锁屏即可在灵动岛继续操作
+struct IslandRecordingView: View {
+    var body: some View {
+        VStack(spacing: 28) {
+            Spacer()
+            Image(systemName: "waveform")
+                .font(.system(size: 64, weight: .medium)).foregroundStyle(Theme.brand)
+                .symbolEffect(.variableColor.iterative.dimInactiveLayers, options: .repeating.speed(1.6))
+            VStack(spacing: 8) {
+                Text("正在聆听").font(Theme.f(22, .semibold))
+                Text("说出:方向 · 币种 · 杠杆 · 全仓/逐仓 · 金额").font(Theme.body).foregroundStyle(Theme.text3)
+                Text("可直接回到桌面或锁屏,在灵动岛点「停止」").font(Theme.caption).foregroundStyle(Theme.text3)
+            }
+            Spacer()
+            HStack(spacing: 14) {
+                Button { Task { await IslandFlow.shared.cancelPending() } } label: {
+                    Text("取消").font(Theme.f(17, .semibold)).frame(maxWidth: .infinity).padding(.vertical, 16)
+                        .background(Theme.card2, in: RoundedRectangle(cornerRadius: 16)).foregroundStyle(Theme.text)
+                }
+                Button { Task { await IslandFlow.shared.finishRecording() } } label: {
+                    Label("停止", systemImage: "stop.fill").font(Theme.f(17, .semibold)).frame(maxWidth: .infinity).padding(.vertical, 16)
+                        .background(Theme.yellow, in: RoundedRectangle(cornerRadius: 16)).foregroundStyle(Theme.onYellow)
+                }
+            }
+            .padding(.horizontal, 20).padding(.bottom, 24)
+        }
     }
 }
