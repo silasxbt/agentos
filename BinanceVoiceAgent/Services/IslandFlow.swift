@@ -56,8 +56,14 @@ final class IslandFlow {
         do { url = try await recorder.recordOnce() }
         catch {
             stopLevelStream()
-            await endCurrent(immediately: true)
-            throw activityCancelled ? FlowError.cancelled : error
+            NSLog("[Island] record failed: \(error.localizedDescription) cancelled=\(activityCancelled)")
+            if activityCancelled {
+                await endCurrent(immediately: true)
+                throw FlowError.cancelled
+            }
+            await update(phase: .failed, order: Self.placeholder, message: "录音失败:\(error.localizedDescription)")
+            await endCurrent(immediately: false)
+            throw error
         }
         stopLevelStream()
         defer { try? FileManager.default.removeItem(at: url) }

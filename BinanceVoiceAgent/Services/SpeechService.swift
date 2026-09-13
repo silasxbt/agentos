@@ -46,7 +46,7 @@ final class SpeechService: NSObject, ObservableObject {
             let input = engine.inputNode
             let inFormat = input.outputFormat(forBus: 0)
             guard inFormat.sampleRate > 0, inFormat.channelCount > 0 else {
-                errorMessage = "没有可用的麦克风输入(模拟器请使用手动输入)"; stopEngine(); return
+                errorMessage = "没有可用的麦克风输入"; NSLog("[Speech] no input format: \(inFormat)"); stopEngine(); return
             }
             let outFormat = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: Self.sampleRate, channels: 1, interleaved: true)!
             let converter = AVAudioConverter(from: inFormat, to: outFormat)!
@@ -77,6 +77,7 @@ final class SpeechService: NSObject, ObservableObject {
             isListening = true
         } catch {
             errorMessage = "无法启动录音: \(error.localizedDescription)"
+            NSLog("[Speech] start failed: \(error)")
             stopEngine()
         }
     }
