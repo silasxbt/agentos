@@ -135,6 +135,12 @@ final class IslandFlow {
             activity = try Activity.request(attributes: TradeActivityAttributes(startedAt: Date()),
                                             content: .init(state: state, staleDate: Date().addingTimeInterval(600)))
             NSLog("[Island] requested id=%@ phase=%@", activity?.id ?? "nil", phase.rawValue)
+            // 系统对新活动默认只显示小胶囊,用户长按才展开;这里紧跟一次 alert 更新,
+            // 让灵动岛在请求后立刻展开成大窗口,避免「先小胶囊、再变长」的中间过程
+            if phase == .listening, let a = activity {
+                let alert = AlertConfiguration(title: "正在聆听", body: "说完后点「停止」", sound: .default)
+                Task { await a.update(.init(state: state, staleDate: Date().addingTimeInterval(600)), alertConfiguration: alert) }
+            }
         } catch { NSLog("[Island] request failed: %@", String(describing: error)) }
     }
 
