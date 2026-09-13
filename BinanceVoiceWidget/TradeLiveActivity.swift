@@ -42,7 +42,7 @@ struct TradeLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(spacing: 8) {
                         if s.phase == .listening {
-                            WaveformView(levels: s.levels, color: Theme.brand)
+                            LiveWaveform(size: 30)
                                 .frame(maxWidth: .infinity).frame(height: 40).padding(.horizontal, 4)
                         } else if s.phase == .transcribing {
                             TranscribingLoader().frame(maxWidth: .infinity).frame(height: 40)
@@ -54,7 +54,7 @@ struct TradeLiveActivity: Widget {
                 if s.phase == .listening {
                     HStack(spacing: 3) {
                         Circle().fill(Theme.red).frame(width: 6, height: 6)
-                        WaveformView(levels: Array(s.levels.suffix(9)), color: Theme.brand, barWidth: 2, spacing: 1.5, maxHeight: 14)
+                        LiveWaveform(size: 14)
                     }
                 } else if s.isPreOrder {
                     Image(systemName: "waveform").foregroundStyle(Theme.brand)
@@ -205,7 +205,7 @@ struct LockScreenCard: View {
                 }
             }
             if state.phase == .listening {
-                WaveformView(levels: state.levels, color: Theme.brand, barWidth: 5, spacing: 4, maxHeight: 48).frame(maxWidth: .infinity)
+                LiveWaveform(size: 36).frame(maxWidth: .infinity)
             } else if state.phase == .transcribing {
                 TranscribingLoader().frame(maxWidth: .infinity).frame(height: 48)
             }
@@ -237,28 +237,14 @@ struct TranscribingLoader: View {
     }
 }
 
-/// 录音音量柱状波形(0~1),中心对称,最近一帧在最右侧
-struct WaveformView: View {
-    let levels: [Float]
-    var color: Color = .yellow
-    var barWidth: CGFloat = 3
-    var spacing: CGFloat = 2.5
-    var maxHeight: CGFloat = 40
-
-    private func height(_ l: Float) -> CGFloat {
-        let boosted = min(1, pow(CGFloat(max(0, l)), 0.55) * 1.2)
-        return max(4, maxHeight * (0.1 + 0.9 * boosted))
-    }
-
+/// 录音中的波形动画:由小组件本地驱动(SF Symbol 效果),不依赖 App 推送状态帧,
+/// 避免高频 Live Activity 更新导致渲染队列积压、按钮/状态切换延迟数秒
+struct LiveWaveform: View {
+    var size: CGFloat = 30
     var body: some View {
-        let n = max(levels.count, 1)
-        HStack(alignment: .center, spacing: spacing) {
-            ForEach(Array(levels.enumerated()), id: \.offset) { i, l in
-                Capsule().fill(color.opacity(0.35 + 0.65 * Double(i + 1) / Double(n)))
-                    .frame(width: barWidth, height: height(l))
-            }
-        }
-        .frame(height: maxHeight)
-        .animation(.easeOut(duration: 0.15), value: levels)
+        Image(systemName: "waveform")
+            .font(.system(size: size, weight: .medium))
+            .foregroundStyle(Theme.brand)
+            .symbolEffect(.variableColor.iterative.dimInactiveLayers, options: .repeating.speed(1.6))
     }
 }

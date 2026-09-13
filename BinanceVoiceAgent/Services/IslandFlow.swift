@@ -11,10 +11,6 @@ final class IslandFlow {
     private var activity: Activity<TradeActivityAttributes>?
     /// 增强语音:App 进程内直接录音(不切前台)
     private let recorder = SpeechService()
-    private var levelSub: AnyCancellable?
-    private var levelRing: [Float] = []
-    private var levelDirty = false
-    private var levelPump: Timer?
     static let waveBars = 28
 
     var requireBiometrics: Bool { UserDefaults.standard.bool(forKey: "requireBiometrics") }
@@ -58,8 +54,7 @@ final class IslandFlow {
             await endCurrent(immediately: false)
             return
         }
-        levelRing = Array(repeating: 0, count: Self.waveBars)
-        show(phase: .listening, order: Self.placeholder, levels: levelRing, recordingStartedAt: Date())
+        show(phase: .listening, order: Self.placeholder, recordingStartedAt: Date())
         startLevelStream()
         Task { await self.runRecording(gen: gen) }
     }
@@ -110,25 +105,10 @@ final class IslandFlow {
     private var activityCancelled = false
 
     /// 录音音量 → 每 0.25s 推一次到 Live Activity(波形动画)
-    private func startLevelStream() {
-        levelSub = recorder.$level.sink { [weak self] l in
-            guard let self else { return }
-            levelRing.removeFirst(); levelRing.append(l); levelDirty = true
-        }
-        levelPump = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                guard let self, self.levelPump != nil, self.levelDirty, let a = self.current, a.content.state.phase == .listening else { return }
-                self.levelDirty = false
-                var st = a.content.state; st.levels = self.levelRing
-                await a.update(.init(state: st, staleDate: nil))
-            }
-        }
-    }
-
-    private func stopLevelStream() {
-        levelSub?.cancel(); levelSub = nil
-        levelPump?.invalidate(); levelPump = nil
-    }
+    // 波形动画改为小组件本地驱动(LiveWaveform),App 不再高频推送音量帧:
+    // 每 0.15s 一次 activity.update 会让系统渲染队列积压数秒,导致「停止」后状态切换延迟。
+    private func startLevelStream() {}
+    private func stopLevelStream() {}
 
     /// 解析文本并在灵动岛展示待确认订单(全局语音入口 / 增强语音转写后)
     @discardableResult
