@@ -29,10 +29,15 @@ struct DashScopeASR {
     /// 转写本地音频文件,返回整段文本
     func transcribe(fileURL: URL, language: String = "zh") async throws -> String {
         guard !apiKey.isEmpty, apiKey.hasPrefix("sk-"), !apiKey.contains("xxxx") else { throw ASRError.missingKey }
+        let t0 = Date()
         let ossURL = try await upload(fileURL: fileURL)
+        NSLog("[ASR] upload %.1fs", Date().timeIntervalSince(t0))
         let taskId = try await submit(ossURL: ossURL, language: language)
+        NSLog("[ASR] submit %.1fs", Date().timeIntervalSince(t0))
         let resultURL = try await poll(taskId: taskId)
-        return try await fetchText(resultURL)
+        let text = try await fetchText(resultURL)
+        NSLog("[ASR] done %.1fs", Date().timeIntervalSince(t0))
+        return text
     }
 
     // MARK: - 1. 临时文件上传

@@ -88,6 +88,7 @@ final class IslandFlow {
             await endCurrent(immediately: false)
             return
         }
+        NSLog("[Island] transcript=\(transcript)")
         guard gen == flowGen, !activityCancelled else { return }
         await start(transcript: transcript)
     }
@@ -116,7 +117,7 @@ final class IslandFlow {
         }
         levelPump = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                guard let self, self.levelDirty, let a = self.current, a.content.state.phase == .listening else { return }
+                guard let self, self.levelPump != nil, self.levelDirty, let a = self.current, a.content.state.phase == .listening else { return }
                 self.levelDirty = false
                 var st = a.content.state; st.levels = self.levelRing
                 await a.update(.init(state: st, staleDate: nil))
@@ -176,6 +177,9 @@ final class IslandFlow {
     /// 灵动岛「完成」:手动结束录音,立即进入转写
     func finishRecording() async {
         guard recorder.isListening else { return }
+        // 先停波形推送,再结束录音;否则最后一帧 listening 状态会覆盖「识别中」,导致岛上波形冻结
+        stopLevelStream()
+        await update(phase: .transcribing, order: Self.placeholder)
         recorder.finish()
     }
 
