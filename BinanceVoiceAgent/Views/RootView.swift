@@ -263,7 +263,7 @@ struct SettingsView: View {
                             path("全局语音", "Apple 听写 · 灵动岛确认", Theme.brand,
                                  "快捷指令:「听写文本」(中文)→「Binance Voice → 全局语音下单」,听写结果接到「交易指令」。任意界面按侧键 → 灵动岛 取消 / 编辑 / 下单。")
                             path("增强语音", "增强识别 · 一键录音", Theme.yellow,
-                                 "设置 → 操作按钮 → 快捷指令 → 「Binance Voice → 增强语音」。按下直接录音(App 保持后台),点「停止」后识别,灵动岛显示结果:取消 / 编辑 / 下单。下单 → 立刻通知成功或失败;编辑 → 打开 App,字段已回填。")
+                                 "设置 → 操作按钮 → 快捷指令 → 「Binance Voice → 增强语音」。按一次开始录音(App 保持后台),再按一次或点「停止」结束并识别,灵动岛显示结果:取消 / 编辑 / 下单。下单 → 立刻通知成功或失败;编辑 → 打开 App,字段已回填。")
                         }.padding(16)
                     }
                     group("关于") {
@@ -359,7 +359,7 @@ struct VoiceSessionCard: View {
                 }
             }
             Text(rec.sessionActive
-                 ? "已开启:回到任意 App 或锁屏,长按 Action Button 直接录音,灵动岛内完成下单。"
+                 ? "已开启:任意 App 或锁屏下,按 Action Button 开始录音,再按一次结束并识别,灵动岛内完成下单。"
                  : "开启后麦克风在后台保持就绪,Action Button 触发时不再需要打开 App。状态栏会显示麦克风指示。")
                 .font(Theme.caption).foregroundStyle(Theme.text3)
             if let e = rec.errorMessage, !rec.sessionActive { Text(e).font(Theme.caption).foregroundStyle(Theme.red) }

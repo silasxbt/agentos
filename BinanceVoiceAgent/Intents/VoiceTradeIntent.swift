@@ -34,7 +34,7 @@ struct VoiceTradeIntent: LiveActivityIntent {
 /// 兼容:若快捷指令里接了「录制音频」的输出,则直接转写该文件。
 struct EnhancedVoiceTradeIntent: LiveActivityIntent, ForegroundContinuableIntent {
     static let title: LocalizedStringResource = "增强语音下单"
-    static let description = IntentDescription("一键录音,由 App 内置增强识别转写,结果在灵动岛确认,不打开 App")
+    static let description = IntentDescription("按一次开始录音,再按一次结束并识别;结果在灵动岛确认")
     static let openAppWhenRun = false
 
     @Parameter(title: "录音文件(可选)", description: "留空则直接录音;也可接「录制音频」的输出", supportedTypeIdentifiers: ["public.audio"])
@@ -55,6 +55,11 @@ struct EnhancedVoiceTradeIntent: LiveActivityIntent, ForegroundContinuableIntent
         }
         // 真机限制:App 在后台时系统不允许开启麦克风(模拟器不校验)。
         // 快捷指令拉起的 App 处于后台,先切到前台再开始录音;录音开始后回桌面/锁屏,灵动岛常驻。
+        // 开关式:录音中再按一次 = 灵动岛「停止」,进入识别
+        if IslandFlow.shared.recorder.isListening {
+            await IslandFlow.shared.finishRecording()
+            return .result()
+        }
         // 已开启「后台语音会话」时引擎常驻,可直接在后台录音,不打开 App
         if UIApplication.shared.applicationState != .active, !IslandFlow.shared.hasBackgroundSession {
             try await requestToContinueInForeground()
