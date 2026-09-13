@@ -40,43 +40,56 @@ final class IslandFlow {
         }
     }
 
-    /// 一键:岛上显示「正在聆听」→ 点「停止」→ 「识别中」→ 解析 → 待确认卡片
-    func listenAndParse() async throws -> (transcript: String, order: TradeOrder) {
+    /// 每次触发递增;旧链路(上次未结束的录音)结束时用它判断是否还有权更新灵动岛
+    private var flowGen = 0
+
+    /// 一键:立刻弹出「正在聆听」并开始录音,然后**马上返回**(快捷指令对 perform 有 30s 超时,
+    /// 而录音只由用户点「停止」结束)。后续 停止 → 识别中 → 待确认 在后台 Task 中继续。
+    func beginListening() async {
+        flowGen += 1
+        let gen = flowGen
+        activityCancelled = false
+        // 上一次触发若还在录音/识别,先掐掉(其 Task 会因 gen 不匹配而静默退出)
+        if recorder.isListening || recorder.isTranscribing { stopLevelStream(); recorder.cancel() }
         pendingDraft = nil
         await endCurrent(immediately: true)
         guard await recorder.requestPermissions() else {
             show(phase: .failed, order: Self.placeholder, message: FlowError.micDenied.localizedDescription)
             await endCurrent(immediately: false)
-            throw FlowError.micDenied
+            return
         }
         levelRing = Array(repeating: 0, count: Self.waveBars)
         show(phase: .listening, order: Self.placeholder, levels: levelRing, recordingStartedAt: Date())
         startLevelStream()
+        Task { await self.runRecording(gen: gen) }
+    }
+
+    private func runRecording(gen: Int) async {
         let url: URL
         do { url = try await recorder.recordOnce() }
         catch {
+            guard gen == flowGen else { NSLog("[Island] stale flow \(gen) ended: \(error.localizedDescription)"); return }
             stopLevelStream()
             NSLog("[Island] record failed: \(error.localizedDescription) cancelled=\(activityCancelled)")
-            if activityCancelled {
-                await endCurrent(immediately: true)
-                throw FlowError.cancelled
-            }
+            if activityCancelled { await endCurrent(immediately: true); return }
             await update(phase: .failed, order: Self.placeholder, message: "录音失败:\(error.localizedDescription)")
             await endCurrent(immediately: false)
-            throw error
+            return
         }
-        stopLevelStream()
         defer { try? FileManager.default.removeItem(at: url) }
+        guard gen == flowGen else { return }
+        stopLevelStream()
         await update(phase: .transcribing, order: Self.placeholder)
         let transcript: String
         do { transcript = try await DashScopeASR().transcribe(fileURL: url) }
         catch {
+            guard gen == flowGen else { return }
             await update(phase: .failed, order: Self.placeholder, message: "转写失败:\(error.localizedDescription)")
             await endCurrent(immediately: false)
-            throw error
+            return
         }
-        let order = await start(transcript: transcript)
-        return (transcript, order)
+        guard gen == flowGen, !activityCancelled else { return }
+        await start(transcript: transcript)
     }
 
     /// 快捷指令传入的录音文件:岛上显示转写中 → 结果

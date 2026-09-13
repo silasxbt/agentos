@@ -52,7 +52,7 @@ struct EnhancedVoiceTradeIntent: LiveActivityIntent {
             await IslandFlow.shared.transcribeAndParse(fileURL: url)
             return .result()
         }
-        _ = try? await IslandFlow.shared.listenAndParse()
+        await IslandFlow.shared.beginListening()
         return .result()
     }
 }
