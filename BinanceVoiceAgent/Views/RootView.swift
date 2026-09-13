@@ -50,6 +50,7 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     hero
+                    VoiceSessionCard()
                     manualInput
                     examples
                     if !state.orders.history.isEmpty { recent }
@@ -97,7 +98,7 @@ struct HomeView: View {
 
                 HStack(spacing: 6) {
                     Image(systemName: "button.vertical.left.press.fill").foregroundStyle(Theme.text3)
-                    Text("或按侧边 Action Button,在任意 App 直接说指令").font(Theme.caption).foregroundStyle(Theme.text3)
+                    Text("开启下方语音会话后,按侧边 Action Button 可在任意 App 直接说指令").font(Theme.caption).foregroundStyle(Theme.text3)
                     Spacer()
                     Button("设置") { state.showSettings = true }.font(Theme.captionM).foregroundStyle(Theme.brand)
                 }
@@ -337,5 +338,53 @@ struct IslandRecordingView: View {
             }
             .padding(.horizontal, 20).padding(.bottom, 24)
         }
+    }
+}
+
+// MARK: - 后台语音会话卡片
+/// iOS 只允许前台开麦;会话开启后引擎在后台常驻,动作按钮触发即可直接录音并出灵动岛,不打开 App
+struct VoiceSessionCard: View {
+    @ObservedObject private var rec = IslandFlow.shared.recorder
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: rec.sessionActive ? "mic.circle.fill" : "mic.circle").foregroundStyle(rec.sessionActive ? Theme.green : Theme.text3)
+                Text("后台语音会话").font(Theme.f(16, .semibold)).foregroundStyle(Theme.text)
+                Spacer()
+                if rec.sessionActive {
+                    if let t = rec.sessionEndsAt {
+                        Text("剩余 ").font(Theme.caption).foregroundStyle(Theme.text3) + Text(t, style: .timer).font(Theme.captionM).foregroundStyle(Theme.green)
+                    } else { Chip(text: "常驻", fg: Theme.green) }
+                }
+            }
+            Text(rec.sessionActive
+                 ? "已开启:回到任意 App 或锁屏,长按 Action Button 直接录音,灵动岛内完成下单。"
+                 : "开启后麦克风在后台保持就绪,Action Button 触发时不再需要打开 App。状态栏会显示麦克风指示。")
+                .font(Theme.caption).foregroundStyle(Theme.text3)
+            if let e = rec.errorMessage, !rec.sessionActive { Text(e).font(Theme.caption).foregroundStyle(Theme.red) }
+            if rec.sessionActive {
+                Button { rec.endSession() } label: { Text("结束会话").frame(maxWidth: .infinity) }
+                    .buttonStyle(BinanceButton(fill: Theme.card2, fg: Theme.text))
+            } else {
+                HStack(spacing: 8) {
+                    sessionButton("15 分钟", 15 * 60)
+                    sessionButton("1 小时", 60 * 60)
+                    sessionButton("常驻", nil)
+                }
+            }
+        }
+        .padding(16)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private func sessionButton(_ title: String, _ d: TimeInterval?) -> some View {
+        Button {
+            Task {
+                guard await rec.requestPermissions() else { return }
+                rec.startSession(duration: d)
+            }
+        } label: { Text(title).font(Theme.f(15, .semibold)).frame(maxWidth: .infinity).padding(.vertical, 12) }
+            .background(Theme.card2, in: RoundedRectangle(cornerRadius: 12)).foregroundStyle(Theme.text)
     }
 }

@@ -10,6 +10,11 @@ final class SpeechService: NSObject, ObservableObject {
     @Published var isTranscribing = false   // 上传 + 云端转写中
     @Published var level: Float = 0          // 0~1 音量,用于波形动画
     @Published var errorMessage: String?
+    /// 后台语音会话:麦克风引擎常驻运行(App 在后台也保持),动作按钮触发时无需切前台即可录音。
+    /// 与 Typeless / Wispr Flow 的 "Flow Session" 机制相同:iOS 只允许前台开麦,但已开启的会话可在后台继续。
+    @Published var sessionActive = false
+    @Published var sessionEndsAt: Date?
+    private var sessionTimer: Timer?
 
     private let engine = AVAudioEngine()
     private var file: AVAudioFile?
@@ -39,47 +44,85 @@ final class SpeechService: NSObject, ObservableObject {
             return
         }
         do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.record, mode: .measurement, options: .duckOthers)
-            try session.setActive(true, options: .notifyOthersOnDeactivation)
-
-            let input = engine.inputNode
-            let inFormat = input.outputFormat(forBus: 0)
-            guard inFormat.sampleRate > 0, inFormat.channelCount > 0 else {
-                errorMessage = "没有可用的麦克风输入"; NSLog("[Speech] no input format: \(inFormat)"); stopEngine(); return
-            }
-            let outFormat = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: Self.sampleRate, channels: 1, interleaved: true)!
-            let converter = AVAudioConverter(from: inFormat, to: outFormat)!
+            if !(sessionActive && engine.isRunning) { try prepareEngine() }
+            let outFormat = Self.outFormat
             let url = FileManager.default.temporaryDirectory.appendingPathComponent("voice_\(Int(Date().timeIntervalSince1970)).wav")
             try? FileManager.default.removeItem(at: url)
             file = try AVAudioFile(forWriting: url, settings: outFormat.settings, commonFormat: .pcmFormatInt16, interleaved: true)
             fileURL = url
-
-            input.removeTap(onBus: 0)
-            input.installTap(onBus: 0, bufferSize: 2048, format: inFormat) { [weak self] buffer, _ in
-                let rms = Self.rms(buffer)
-                let ratio = outFormat.sampleRate / inFormat.sampleRate
-                let cap = AVAudioFrameCount(Double(buffer.frameLength) * ratio) + 16
-                guard let out = AVAudioPCMBuffer(pcmFormat: outFormat, frameCapacity: cap) else { return }
-                var done = false
-                var err: NSError?
-                converter.convert(to: out, error: &err) { _, status in
-                    if done { status.pointee = .noDataNow; return nil }
-                    done = true; status.pointee = .haveData; return buffer
-                }
-                Task { @MainActor in
-                    guard let self, self.isListening else { return }
-                    if err == nil, out.frameLength > 0 { try? self.file?.write(from: out) }
-                    self.level = min(1, rms * 12)
-                }
-            }
-            engine.prepare(); try engine.start()
             isListening = true
         } catch {
             errorMessage = "无法启动录音: \(error.localizedDescription)"
             NSLog("[Speech] start failed: \(error)")
             stopEngine()
         }
+    }
+
+    private static let outFormat = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: sampleRate, channels: 1, interleaved: true)!
+
+    private struct NoInput: LocalizedError { var errorDescription: String? { "没有可用的麦克风输入" } }
+
+    /// 激活音频会话、安装转码 tap 并启动引擎(前台才能成功开麦)
+    private func prepareEngine() throws {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.record, mode: .measurement, options: .duckOthers)
+        try session.setActive(true, options: .notifyOthersOnDeactivation)
+
+        let input = engine.inputNode
+        let inFormat = input.outputFormat(forBus: 0)
+        guard inFormat.sampleRate > 0, inFormat.channelCount > 0 else {
+            NSLog("[Speech] no input format: \(inFormat)"); throw NoInput()
+        }
+        let outFormat = Self.outFormat
+        let converter = AVAudioConverter(from: inFormat, to: outFormat)!
+        input.removeTap(onBus: 0)
+        input.installTap(onBus: 0, bufferSize: 2048, format: inFormat) { [weak self] buffer, _ in
+            let rms = Self.rms(buffer)
+            let ratio = outFormat.sampleRate / inFormat.sampleRate
+            let cap = AVAudioFrameCount(Double(buffer.frameLength) * ratio) + 16
+            guard let out = AVAudioPCMBuffer(pcmFormat: outFormat, frameCapacity: cap) else { return }
+            var done = false
+            var err: NSError?
+            converter.convert(to: out, error: &err) { _, status in
+                if done { status.pointee = .noDataNow; return nil }
+                done = true; status.pointee = .haveData; return buffer
+            }
+            Task { @MainActor in
+                guard let self, self.isListening else { return }
+                if err == nil, out.frameLength > 0 { try? self.file?.write(from: out) }
+                self.level = min(1, rms * 12)
+            }
+        }
+        engine.prepare(); try engine.start()
+    }
+
+    // MARK: - 后台语音会话
+
+    /// 开启会话(须在前台调用):引擎常驻,之后动作按钮可在后台直接开始录音。duration 为 nil 表示常驻直到手动结束
+    func startSession(duration: TimeInterval?) {
+        errorMessage = nil
+        do {
+            if !engine.isRunning { try prepareEngine() }
+            sessionActive = true
+            sessionTimer?.invalidate(); sessionTimer = nil
+            if let duration {
+                sessionEndsAt = Date().addingTimeInterval(duration)
+                sessionTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
+                    Task { @MainActor in self?.endSession() }
+                }
+            } else { sessionEndsAt = nil }
+            NSLog("[Speech] session started, ends=%@", sessionEndsAt.map { "\($0)" } ?? "never")
+        } catch {
+            errorMessage = "无法开启语音会话: \(error.localizedDescription)"
+            NSLog("[Speech] session start failed: \(error)")
+        }
+    }
+
+    func endSession() {
+        sessionTimer?.invalidate(); sessionTimer = nil
+        sessionActive = false; sessionEndsAt = nil
+        if isListening { cancel() } else { stopEngine() }
+        NSLog("[Speech] session ended")
     }
 
     func finish() {
@@ -128,6 +171,7 @@ final class SpeechService: NSObject, ObservableObject {
 
     private func stopEngine() {
         isListening = false; level = 0
+        if sessionActive { return }   // 会话期间引擎常驻,只停止写文件
         if engine.isRunning { engine.stop() }
         engine.inputNode.removeTap(onBus: 0)
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)

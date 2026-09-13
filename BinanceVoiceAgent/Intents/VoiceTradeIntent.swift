@@ -55,7 +55,8 @@ struct EnhancedVoiceTradeIntent: LiveActivityIntent, ForegroundContinuableIntent
         }
         // 真机限制:App 在后台时系统不允许开启麦克风(模拟器不校验)。
         // 快捷指令拉起的 App 处于后台,先切到前台再开始录音;录音开始后回桌面/锁屏,灵动岛常驻。
-        if UIApplication.shared.applicationState != .active {
+        // 已开启「后台语音会话」时引擎常驻,可直接在后台录音,不打开 App
+        if UIApplication.shared.applicationState != .active, !IslandFlow.shared.hasBackgroundSession {
             try await requestToContinueInForeground()
         }
         await IslandFlow.shared.beginListening()

@@ -12,7 +12,9 @@ final class IslandFlow: ObservableObject {
     private let draftKey = "island.pendingDraft"
     private var activity: Activity<TradeActivityAttributes>?
     /// 增强语音:App 进程内直接录音(不切前台)
-    private let recorder = SpeechService()
+    let recorder = SpeechService()
+    /// 后台语音会话开启中:动作按钮可在后台直接录音,无需切前台
+    var hasBackgroundSession: Bool { recorder.sessionActive }
     static let waveBars = 28
 
     var requireBiometrics: Bool { UserDefaults.standard.bool(forKey: "requireBiometrics") }
